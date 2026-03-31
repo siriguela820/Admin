@@ -1,0 +1,2303 @@
+-- ============================================================
+--   Siriguela Admin | v2.8.0
+--   Roblox Executor Script
+-- ============================================================
+
+-- ============================================================
+-- SERVICES
+-- ============================================================
+local Players            = game:GetService("Players")
+local UserInputService   = game:GetService("UserInputService")
+local TweenService       = game:GetService("TweenService")
+local RunService         = game:GetService("RunService")
+local HttpService        = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local TeleportService    = game:GetService("TeleportService")
+local ReplicatedStorage  = game:GetService("ReplicatedStorage")
+local CoreGui            = game:GetService("CoreGui")
+local TextChatService    = game:GetService("TextChatService")
+local StarterGui         = game:GetService("StarterGui")
+local Lighting           = game:GetService("Lighting")
+local SoundService       = game:GetService("SoundService")
+local Teams              = game:GetService("Teams")
+
+-- ============================================================
+-- GLOBALS / CONFIG
+-- ============================================================
+local LP              = Players.LocalPlayer
+local Mouse           = LP:GetMouse()
+local Camera          = workspace.CurrentCamera
+local Siriguela_Version     = "2.8.0"
+local Siriguela_Prefix      = ";"
+local Siriguela_OpenKey     = Enum.KeyCode.RightControl
+local Siriguela_Visible     = true
+local Siriguela_Minimized   = false
+local Siriguela_Logs        = {}
+local Siriguela_CmdHistory  = {}
+local Siriguela_HistoryIdx  = 0
+local Siriguela_Aliases     = {}
+local Siriguela_Waypoints   = {}
+local Siriguela_Binds       = {}
+local Siriguela_Notifications = {}
+local Siriguela_SpeedVal    = 16
+local Siriguela_JumpVal     = 50
+local Siriguela_GodMode     = false
+local Siriguela_Noclip      = false
+local Siriguela_ESPEnabled  = false
+local Siriguela_InfJump     = false
+local Siriguela_ClickTP     = false
+local Siriguela_FlyEnabled  = false
+local Siriguela_FlySpeed    = 60
+local Siriguela_AntiAFK     = false
+local Siriguela_Theme       = "cyan"
+local Siriguela_LoopHeal    = false
+local Siriguela_Spin        = false
+local Siriguela_Freeze      = false
+local Siriguela_ClickTPOn   = false
+local Siriguela_FullBright  = false
+local Siriguela_AutocompleteOn = true
+
+-- ============================================================
+-- THEME COLORS
+-- ============================================================
+local Themes = {
+    cyan = {
+        Main      = Color3.fromRGB(12, 15, 22),
+        Secondary = Color3.fromRGB(18, 22, 32),
+        Accent    = Color3.fromRGB(0, 220, 255),
+        Accent2   = Color3.fromRGB(0, 160, 200),
+        Text      = Color3.fromRGB(220, 232, 255),
+        SubText   = Color3.fromRGB(110, 130, 165),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(0, 220, 130),
+        Border    = Color3.fromRGB(30, 42, 65),
+        TitleBar  = Color3.fromRGB(10, 13, 20),
+    },
+    purple = {
+        Main      = Color3.fromRGB(14, 11, 22),
+        Secondary = Color3.fromRGB(22, 16, 35),
+        Accent    = Color3.fromRGB(165, 90, 255),
+        Accent2   = Color3.fromRGB(120, 60, 200),
+        Text      = Color3.fromRGB(230, 220, 255),
+        SubText   = Color3.fromRGB(120, 105, 155),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(90, 255, 160),
+        Border    = Color3.fromRGB(45, 30, 72),
+        TitleBar  = Color3.fromRGB(10, 8, 18),
+    },
+    red = {
+        Main      = Color3.fromRGB(20, 11, 12),
+        Secondary = Color3.fromRGB(30, 16, 18),
+        Accent    = Color3.fromRGB(255, 55, 80),
+        Accent2   = Color3.fromRGB(200, 35, 60),
+        Text      = Color3.fromRGB(255, 225, 228),
+        SubText   = Color3.fromRGB(155, 110, 115),
+        Red       = Color3.fromRGB(255, 55, 80),
+        Green     = Color3.fromRGB(0, 220, 130),
+        Border    = Color3.fromRGB(65, 28, 34),
+        TitleBar  = Color3.fromRGB(15, 8, 9),
+    },
+    green = {
+        Main      = Color3.fromRGB(9, 18, 14),
+        Secondary = Color3.fromRGB(12, 26, 20),
+        Accent    = Color3.fromRGB(0, 255, 145),
+        Accent2   = Color3.fromRGB(0, 190, 105),
+        Text      = Color3.fromRGB(210, 255, 235),
+        SubText   = Color3.fromRGB(95, 145, 118),
+        Red       = Color3.fromRGB(255, 80, 80),
+        Green     = Color3.fromRGB(0, 255, 145),
+        Border    = Color3.fromRGB(20, 55, 38),
+        TitleBar  = Color3.fromRGB(7, 13, 10),
+    },
+    orange = {
+        Main      = Color3.fromRGB(18, 12, 7),
+        Secondary = Color3.fromRGB(28, 18, 10),
+        Accent    = Color3.fromRGB(255, 140, 0),
+        Accent2   = Color3.fromRGB(200, 100, 0),
+        Text      = Color3.fromRGB(255, 235, 210),
+        SubText   = Color3.fromRGB(160, 120, 80),
+        Red       = Color3.fromRGB(255, 70, 70),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(65, 38, 15),
+        TitleBar  = Color3.fromRGB(12, 8, 4),
+    },
+    yellow = {
+        Main      = Color3.fromRGB(16, 14, 5),
+        Secondary = Color3.fromRGB(26, 22, 8),
+        Accent    = Color3.fromRGB(255, 220, 0),
+        Accent2   = Color3.fromRGB(200, 170, 0),
+        Text      = Color3.fromRGB(255, 248, 210),
+        SubText   = Color3.fromRGB(165, 148, 80),
+        Red       = Color3.fromRGB(255, 70, 70),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(60, 50, 10),
+        TitleBar  = Color3.fromRGB(10, 9, 3),
+    },
+    darkblue = {
+        Main      = Color3.fromRGB(5, 8, 20),
+        Secondary = Color3.fromRGB(10, 15, 35),
+        Accent    = Color3.fromRGB(60, 120, 255),
+        Accent2   = Color3.fromRGB(40, 90, 200),
+        Text      = Color3.fromRGB(200, 215, 255),
+        SubText   = Color3.fromRGB(80, 105, 165),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(0, 220, 130),
+        Border    = Color3.fromRGB(20, 32, 75),
+        TitleBar  = Color3.fromRGB(3, 5, 15),
+    },
+    pink = {
+        Main      = Color3.fromRGB(20, 8, 14),
+        Secondary = Color3.fromRGB(32, 12, 22),
+        Accent    = Color3.fromRGB(255, 60, 160),
+        Accent2   = Color3.fromRGB(200, 40, 120),
+        Text      = Color3.fromRGB(255, 220, 240),
+        SubText   = Color3.fromRGB(165, 90, 130),
+        Red       = Color3.fromRGB(255, 70, 70),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(70, 18, 45),
+        TitleBar  = Color3.fromRGB(12, 4, 8),
+    },
+    teal = {
+        Main      = Color3.fromRGB(5, 18, 18),
+        Secondary = Color3.fromRGB(8, 28, 28),
+        Accent    = Color3.fromRGB(0, 210, 190),
+        Accent2   = Color3.fromRGB(0, 160, 145),
+        Text      = Color3.fromRGB(200, 255, 252),
+        SubText   = Color3.fromRGB(70, 155, 148),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(0, 240, 140),
+        Border    = Color3.fromRGB(10, 55, 52),
+        TitleBar  = Color3.fromRGB(3, 10, 10),
+    },
+    gold = {
+        Main      = Color3.fromRGB(18, 14, 4),
+        Secondary = Color3.fromRGB(28, 22, 6),
+        Accent    = Color3.fromRGB(255, 190, 30),
+        Accent2   = Color3.fromRGB(200, 145, 10),
+        Text      = Color3.fromRGB(255, 245, 200),
+        SubText   = Color3.fromRGB(165, 138, 65),
+        Red       = Color3.fromRGB(255, 70, 70),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(62, 46, 8),
+        TitleBar  = Color3.fromRGB(10, 8, 2),
+    },
+    rose = {
+        Main      = Color3.fromRGB(20, 10, 12),
+        Secondary = Color3.fromRGB(32, 15, 18),
+        Accent    = Color3.fromRGB(255, 120, 140),
+        Accent2   = Color3.fromRGB(210, 85, 105),
+        Text      = Color3.fromRGB(255, 230, 235),
+        SubText   = Color3.fromRGB(165, 100, 112),
+        Red       = Color3.fromRGB(255, 60, 60),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(70, 25, 32),
+        TitleBar  = Color3.fromRGB(12, 5, 6),
+    },
+    coral = {
+        Main      = Color3.fromRGB(20, 10, 8),
+        Secondary = Color3.fromRGB(32, 16, 12),
+        Accent    = Color3.fromRGB(255, 100, 75),
+        Accent2   = Color3.fromRGB(210, 70, 48),
+        Text      = Color3.fromRGB(255, 230, 220),
+        SubText   = Color3.fromRGB(165, 100, 82),
+        Red       = Color3.fromRGB(255, 50, 50),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(70, 25, 18),
+        TitleBar  = Color3.fromRGB(12, 5, 4),
+    },
+    lavender = {
+        Main      = Color3.fromRGB(14, 10, 22),
+        Secondary = Color3.fromRGB(22, 16, 35),
+        Accent    = Color3.fromRGB(185, 140, 255),
+        Accent2   = Color3.fromRGB(145, 100, 215),
+        Text      = Color3.fromRGB(235, 225, 255),
+        SubText   = Color3.fromRGB(120, 95, 165),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(38, 25, 65),
+        TitleBar  = Color3.fromRGB(8, 5, 14),
+    },
+    crimson = {
+        Main      = Color3.fromRGB(18, 4, 6),
+        Secondary = Color3.fromRGB(30, 6, 10),
+        Accent    = Color3.fromRGB(220, 20, 50),
+        Accent2   = Color3.fromRGB(170, 10, 35),
+        Text      = Color3.fromRGB(255, 210, 215),
+        SubText   = Color3.fromRGB(160, 75, 85),
+        Red       = Color3.fromRGB(255, 50, 50),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(65, 8, 15),
+        TitleBar  = Color3.fromRGB(10, 2, 4),
+    },
+    emerald = {
+        Main      = Color3.fromRGB(4, 16, 10),
+        Secondary = Color3.fromRGB(6, 26, 16),
+        Accent    = Color3.fromRGB(0, 200, 100),
+        Accent2   = Color3.fromRGB(0, 155, 75),
+        Text      = Color3.fromRGB(200, 255, 225),
+        SubText   = Color3.fromRGB(55, 150, 90),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(0, 240, 130),
+        Border    = Color3.fromRGB(8, 48, 28),
+        TitleBar  = Color3.fromRGB(2, 9, 5),
+    },
+    sunset = {
+        Main      = Color3.fromRGB(18, 8, 6),
+        Secondary = Color3.fromRGB(30, 12, 8),
+        Accent    = Color3.fromRGB(255, 80, 30),
+        Accent2   = Color3.fromRGB(200, 55, 15),
+        Text      = Color3.fromRGB(255, 230, 210),
+        SubText   = Color3.fromRGB(165, 100, 70),
+        Red       = Color3.fromRGB(255, 40, 40),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(68, 20, 8),
+        TitleBar  = Color3.fromRGB(10, 4, 3),
+    },
+    ocean = {
+        Main      = Color3.fromRGB(4, 12, 22),
+        Secondary = Color3.fromRGB(6, 20, 36),
+        Accent    = Color3.fromRGB(0, 175, 235),
+        Accent2   = Color3.fromRGB(0, 130, 185),
+        Text      = Color3.fromRGB(195, 235, 255),
+        SubText   = Color3.fromRGB(55, 130, 170),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(0, 220, 130),
+        Border    = Color3.fromRGB(8, 35, 65),
+        TitleBar  = Color3.fromRGB(2, 6, 13),
+    },
+    midnight = {
+        Main      = Color3.fromRGB(8, 6, 18),
+        Secondary = Color3.fromRGB(14, 10, 30),
+        Accent    = Color3.fromRGB(120, 80, 255),
+        Accent2   = Color3.fromRGB(85, 50, 200),
+        Text      = Color3.fromRGB(220, 210, 255),
+        SubText   = Color3.fromRGB(90, 75, 150),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(25, 18, 60),
+        TitleBar  = Color3.fromRGB(4, 3, 10),
+    },
+    aurora = {
+        Main      = Color3.fromRGB(4, 14, 18),
+        Secondary = Color3.fromRGB(7, 22, 28),
+        Accent    = Color3.fromRGB(0, 255, 200),
+        Accent2   = Color3.fromRGB(0, 200, 240),
+        Text      = Color3.fromRGB(200, 255, 248),
+        SubText   = Color3.fromRGB(55, 165, 155),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(0, 240, 160),
+        Border    = Color3.fromRGB(8, 55, 52),
+        TitleBar  = Color3.fromRGB(2, 8, 11),
+    },
+    galaxy = {
+        Main      = Color3.fromRGB(6, 4, 16),
+        Secondary = Color3.fromRGB(12, 8, 28),
+        Accent    = Color3.fromRGB(200, 80, 255),
+        Accent2   = Color3.fromRGB(140, 40, 210),
+        Text      = Color3.fromRGB(235, 220, 255),
+        SubText   = Color3.fromRGB(115, 75, 175),
+        Red       = Color3.fromRGB(255, 60, 90),
+        Green     = Color3.fromRGB(80, 220, 140),
+        Border    = Color3.fromRGB(30, 14, 62),
+        TitleBar  = Color3.fromRGB(3, 2, 9),
+    },
+    prism = {
+        Main      = Color3.fromRGB(6, 6, 10),
+        Secondary = Color3.fromRGB(12, 12, 20),
+        Accent    = Color3.fromRGB(255, 220, 80),
+        Accent2   = Color3.fromRGB(255, 160, 40),
+        Text      = Color3.fromRGB(255, 248, 220),
+        SubText   = Color3.fromRGB(160, 145, 80),
+        Red       = Color3.fromRGB(255, 70, 70),
+        Green     = Color3.fromRGB(80, 255, 140),
+        Border    = Color3.fromRGB(52, 46, 12),
+        TitleBar  = Color3.fromRGB(3, 3, 5),
+    },
+    inferno = {
+        Main      = Color3.fromRGB(14, 4, 2),
+        Secondary = Color3.fromRGB(24, 7, 3),
+        Accent    = Color3.fromRGB(255, 120, 0),
+        Accent2   = Color3.fromRGB(220, 60, 0),
+        Text      = Color3.fromRGB(255, 230, 200),
+        SubText   = Color3.fromRGB(165, 90, 50),
+        Red       = Color3.fromRGB(255, 40, 40),
+        Green     = Color3.fromRGB(80, 220, 120),
+        Border    = Color3.fromRGB(65, 15, 4),
+        TitleBar  = Color3.fromRGB(8, 2, 1),
+    },
+    void = {
+        Main      = Color3.fromRGB(4, 4, 8),
+        Secondary = Color3.fromRGB(8, 8, 16),
+        Accent    = Color3.fromRGB(80, 200, 255),
+        Accent2   = Color3.fromRGB(40, 150, 220),
+        Text      = Color3.fromRGB(210, 235, 255),
+        SubText   = Color3.fromRGB(65, 110, 155),
+        Red       = Color3.fromRGB(255, 70, 90),
+        Green     = Color3.fromRGB(0, 220, 160),
+        Border    = Color3.fromRGB(14, 18, 42),
+        TitleBar  = Color3.fromRGB(2, 2, 5),
+    },
+}
+
+local C = Themes[Siriguela_Theme]
+
+local Siriguela_ThemedElements = {}
+
+local function themeReg(obj, prop, key)
+    table.insert(Siriguela_ThemedElements, {obj=obj, prop=prop, key=key})
+    obj[prop] = C[key]
+end
+local function themeRegFunc(fn)
+    table.insert(Siriguela_ThemedElements, {func=fn})
+    fn()
+end
+
+local function applyTheme(theme)
+    Siriguela_Theme = theme
+    C = Themes[theme] or Themes["cyan"]
+    for _, e in ipairs(Siriguela_ThemedElements) do
+        if e.func then
+            pcall(e.func)
+        else
+            pcall(function() e.obj[e.prop] = C[e.key] end)
+        end
+    end
+    if Siriguela_ESPEnabled then
+        pcall(function() drawESP() end)
+    end
+    notify("Theme", "Applied: " .. theme)
+end
+
+-- ============================================================
+-- UTILITY FUNCTIONS
+-- ============================================================
+local function applyTween(obj, props, t, style, dir)
+    style = style or Enum.EasingStyle.Quart
+    dir   = dir   or Enum.EasingDirection.Out
+    t     = t     or 0.25
+    TweenService:Create(obj, TweenInfo.new(t, style, dir), props):Play()
+end
+
+local function getRoot(char)
+    return char and (char:FindFirstChild("HumanoidRootPart") or char:FindFirstChild("UpperTorso") or char:FindFirstChild("Torso"))
+end
+
+local function getHuman(char)
+    return char and char:FindFirstChildOfClass("Humanoid")
+end
+
+local function getChar(plr)
+    plr = plr or LP
+    return plr and plr.Character
+end
+
+local function findPlayer(name)
+    name = name:lower()
+    if name == "me" then return LP end
+    if name == "all" then return Players:GetPlayers() end
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p.Name:lower():sub(1, #name) == name then return p end
+    end
+    return nil
+end
+
+local function notify(title, msg, duration)
+    duration = duration or 4
+    task.spawn(function()
+        if Siriguela_NotifyFunc then
+            Siriguela_NotifyFunc(title, msg, duration)
+        end
+    end)
+end
+
+local function addLog(msg)
+    table.insert(Siriguela_Logs, os.date("[%H:%M:%S] ") .. tostring(msg))
+    if #Siriguela_Logs > 200 then table.remove(Siriguela_Logs, 1) end
+    if Siriguela_LogLabel then
+        Siriguela_LogLabel.Text = table.concat(Siriguela_Logs, "\n")
+        Siriguela_LogLabel.Parent.CanvasPosition = Vector2.new(0, Siriguela_LogLabel.AbsoluteSize.Y)
+    end
+end
+
+local function randomString(len)
+    len = len or 12
+    local chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    local s = ""
+    for _ = 1, len do
+        local r = math.random(1, #chars)
+        s = s .. chars:sub(r, r)
+    end
+    return s
+end
+
+-- ============================================================
+-- GUI SETUP
+-- ============================================================
+pcall(function()
+    local ex = CoreGui:FindFirstChild("SiriguelaAdminGui")
+    if ex then ex:Destroy() end
+end)
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name            = "SiriguelaAdminGui"
+ScreenGui.ZIndexBehavior  = Enum.ZIndexBehavior.Sibling
+ScreenGui.ResetOnSpawn    = false
+ScreenGui.DisplayOrder    = 999
+ScreenGui.IgnoreGuiInset  = true
+pcall(function() ScreenGui.Parent = CoreGui end)
+if not ScreenGui.Parent then ScreenGui.Parent = LP.PlayerGui end
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name             = "MainFrame"
+MainFrame.Parent           = ScreenGui
+MainFrame.BackgroundColor3 = C.Main
+MainFrame.BorderSizePixel  = 0
+MainFrame.Position         = UDim2.new(0.5,-400, 0.5,-260)
+MainFrame.Size             = UDim2.new(0,800, 0,520)
+MainFrame.ClipsDescendants = false
+local _mfc = Instance.new("UICorner"); _mfc.CornerRadius = UDim.new(0,10); _mfc.Parent = MainFrame
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = C.Border; MainStroke.Thickness = 1.2; MainStroke.Parent = MainFrame
+
+local _topGlow = Instance.new("Frame")
+_topGlow.BackgroundColor3 = C.Accent; _topGlow.BackgroundTransparency = 0.82
+_topGlow.BorderSizePixel = 0; _topGlow.Size = UDim2.new(0.6,0,0,1)
+_topGlow.AnchorPoint = Vector2.new(0.5,0); _topGlow.Position = UDim2.new(0.5,0,0,0)
+_topGlow.Parent = MainFrame
+
+-- TITLE BAR
+local TitleBar = Instance.new("Frame")
+TitleBar.Name             = "TitleBar"
+TitleBar.Parent           = MainFrame
+TitleBar.BackgroundColor3 = C.TitleBar
+TitleBar.BorderSizePixel  = 0
+TitleBar.Size             = UDim2.new(1,0,0,44)
+local _tbc = Instance.new("UICorner"); _tbc.CornerRadius = UDim.new(0,10); _tbc.Parent = TitleBar
+local TitleFix = Instance.new("Frame")
+TitleFix.BackgroundColor3 = C.TitleBar; TitleFix.BorderSizePixel = 0
+TitleFix.Position = UDim2.new(0,0,0.5,0); TitleFix.Size = UDim2.new(1,0,0.5,0); TitleFix.Parent = TitleBar
+
+local _lb1 = Instance.new("Frame")
+_lb1.BackgroundColor3 = C.Accent; _lb1.BorderSizePixel = 0
+_lb1.Position = UDim2.new(0,14,0.5,-12); _lb1.Size = UDim2.new(0,3,0,24); _lb1.Parent = TitleBar
+local _lb1c = Instance.new("UICorner"); _lb1c.CornerRadius = UDim.new(1,0); _lb1c.Parent = _lb1
+local _lb2 = Instance.new("Frame")
+_lb2.BackgroundColor3 = C.Accent2; _lb2.BackgroundTransparency = 0.3; _lb2.BorderSizePixel = 0
+_lb2.Position = UDim2.new(0,20,0.5,-8); _lb2.Size = UDim2.new(0,2,0,16); _lb2.Parent = TitleBar
+local _lb2c = Instance.new("UICorner"); _lb2c.CornerRadius = UDim.new(1,0); _lb2c.Parent = _lb2
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"; TitleLabel.Parent = TitleBar
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0,28,0,0); TitleLabel.Size = UDim2.new(0,44,1,0)
+TitleLabel.Font = Enum.Font.GothamBold; TitleLabel.Text = "Siriguela"
+TitleLabel.TextColor3 = C.Accent; TitleLabel.TextSize = 18
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local _tSub = Instance.new("TextLabel"); _tSub.Parent = TitleBar
+_tSub.BackgroundTransparency = 1
+_tSub.Position = UDim2.new(0,70,0,0); _tSub.Size = UDim2.new(0,76,1,0)
+_tSub.Font = Enum.Font.Gotham; _tSub.Text = "ADMIN"
+_tSub.TextColor3 = C.SubText; _tSub.TextSize = 14
+_tSub.TextXAlignment = Enum.TextXAlignment.Left
+
+local VersionLabel = Instance.new("TextLabel")
+VersionLabel.Name = "VersionLabel"; VersionLabel.Parent = TitleBar
+VersionLabel.BackgroundColor3 = C.Accent; VersionLabel.BackgroundTransparency = 0.78
+VersionLabel.Position = UDim2.new(0,152,0.5,-10); VersionLabel.Size = UDim2.new(0,66,0,20)
+VersionLabel.Font = Enum.Font.Code; VersionLabel.Text = "v"..Siriguela_Version
+VersionLabel.TextColor3 = C.Accent; VersionLabel.TextSize = 10
+local _vlc = Instance.new("UICorner"); _vlc.CornerRadius = UDim.new(0,4); _vlc.Parent = VersionLabel
+local _vls = Instance.new("UIStroke"); _vls.Color = C.Accent; _vls.Thickness = 1
+_vls.Transparency = 0.55; _vls.Parent = VersionLabel
+
+local _onDot = Instance.new("Frame"); _onDot.Parent = TitleBar
+_onDot.BackgroundColor3 = Color3.fromRGB(55,215,95); _onDot.BorderSizePixel = 0
+_onDot.AnchorPoint = Vector2.new(0,0.5)
+_onDot.Position = UDim2.new(0,226,0.5,0); _onDot.Size = UDim2.new(0,6,0,6)
+local _onDotC = Instance.new("UICorner"); _onDotC.CornerRadius = UDim.new(1,0); _onDotC.Parent = _onDot
+local _playerTag = Instance.new("TextLabel"); _playerTag.Parent = TitleBar
+_playerTag.BackgroundTransparency = 1
+_playerTag.Position = UDim2.new(0,236,0,0); _playerTag.Size = UDim2.new(0.3,0,1,0)
+_playerTag.Font = Enum.Font.Code; _playerTag.Text = LP.Name
+_playerTag.TextColor3 = C.SubText; _playerTag.TextSize = 11
+_playerTag.TextXAlignment = Enum.TextXAlignment.Left
+
+local function _mkBtn(sym, xOff, bg, fgColor)
+    local b = Instance.new("TextButton"); b.Parent = TitleBar
+    b.BackgroundColor3 = bg; b.BackgroundTransparency = 0.15
+    b.BorderSizePixel = 0; b.AnchorPoint = Vector2.new(1,0.5)
+    b.Position = UDim2.new(1,xOff,0.5,0); b.Size = UDim2.new(0,24,0,24)
+    b.Font = Enum.Font.GothamBold; b.Text = sym
+    b.TextColor3 = fgColor or Color3.fromRGB(255,255,255); b.TextSize = 11
+    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(1,0); c.Parent = b
+    return b
+end
+local MinBtn   = _mkBtn("—", -40, C.Border,      C.SubText)
+local CloseBtn = _mkBtn("×", -12, Color3.fromRGB(185,38,48), Color3.fromRGB(255,255,255))
+
+CloseBtn.MouseButton1Click:Connect(function()
+    local guiW=UserInputService.TouchEnabled and math.min(800,workspace.CurrentCamera.ViewportSize.X-10) or 800
+    applyTween(MainFrame,{Size=UDim2.new(0,guiW,0,0)},0.22)
+    task.wait(0.26); ScreenGui:Destroy(); _G.AON_LOADED = false
+end)
+
+local _drg,_drgs,_drp
+local function _onDragStart(pos)
+    _drg=true; _drgs=pos; _drp=MainFrame.Position end
+local function _onDragEnd()
+    _drg=false end
+local function _onDragMove(pos)
+    if not _drg then return end
+    local d=pos-_drgs
+    MainFrame.Position=UDim2.new(_drp.X.Scale,_drp.X.Offset+d.X,_drp.Y.Scale,_drp.Y.Offset+d.Y)
+end
+-- Mouse
+TitleBar.InputBegan:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.MouseButton1 then
+        _onDragStart(i.Position) end end)
+TitleBar.InputEnded:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.MouseButton1 then _onDragEnd() end end)
+UserInputService.InputChanged:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.MouseMovement then _onDragMove(i.Position) end end)
+-- Touch
+TitleBar.InputBegan:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.Touch then
+        _onDragStart(i.Position) end end)
+TitleBar.InputEnded:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.Touch then _onDragEnd() end end)
+TitleBar.InputChanged:Connect(function(i)
+    if i.UserInputType==Enum.UserInputType.Touch then _onDragMove(i.Position) end end)
+
+local AccentLine = Instance.new("Frame")
+AccentLine.BackgroundColor3 = C.Accent; AccentLine.BorderSizePixel = 0
+AccentLine.Position = UDim2.new(0,0,1,-1); AccentLine.Size = UDim2.new(1,0,0,1)
+AccentLine.Parent = TitleBar
+
+-- SIDEBAR
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"; Sidebar.Parent = MainFrame
+Sidebar.BackgroundColor3 = C.TitleBar; Sidebar.BorderSizePixel = 0
+Sidebar.Position = UDim2.new(0,0,0,44); Sidebar.Size = UDim2.new(0,160,1,-88)
+local _sbTopFix = Instance.new("Frame")
+_sbTopFix.BackgroundColor3=C.TitleBar; _sbTopFix.BorderSizePixel=0
+_sbTopFix.Size=UDim2.new(1,0,0,10); _sbTopFix.Parent=Sidebar
+
+local SidebarSep = Instance.new("Frame")
+SidebarSep.Name="SidebarSep"; SidebarSep.BackgroundColor3=C.Border
+SidebarSep.BorderSizePixel=0
+SidebarSep.Position=UDim2.new(0,160,0,44); SidebarSep.Size=UDim2.new(0,1,1,-88)
+SidebarSep.Parent=MainFrame
+
+local ContentHolder = Instance.new("Frame")
+ContentHolder.Name="ContentHolder"; ContentHolder.Parent=MainFrame
+ContentHolder.BackgroundTransparency=1; ContentHolder.BorderSizePixel=0
+ContentHolder.Position=UDim2.new(0,161,0,44); ContentHolder.Size=UDim2.new(1,-161,1,-88)
+
+local _sbL = Instance.new("UIListLayout")
+_sbL.FillDirection=Enum.FillDirection.Vertical; _sbL.SortOrder=Enum.SortOrder.LayoutOrder
+_sbL.Padding=UDim.new(0,1); _sbL.Parent=Sidebar
+local _sbP = Instance.new("UIPadding")
+_sbP.PaddingLeft=UDim.new(0,8); _sbP.PaddingRight=UDim.new(0,8)
+_sbP.PaddingTop=UDim.new(0,12); _sbP.Parent=Sidebar
+
+local _tabSym = {
+    Commands  = "⌘",
+    Players   = "◉",
+    Character = "✦",
+    World     = "◈",
+    ESP       = "◎",
+    Logs      = "≡",
+    Changelog = "◆",
+    Settings  = "⚙",
+}
+
+local tabs      = {}
+local activeTab = nil
+local tabNames  = {"Commands","Players","Character","World","ESP","Logs","Changelog","Settings"}
+
+local function makeTab(name, order)
+    local wrap = Instance.new("Frame")
+    wrap.BackgroundTransparency=1; wrap.Size=UDim2.new(1,0,0,40)
+    wrap.LayoutOrder=order; wrap.Parent=Sidebar
+
+    local bgFill = Instance.new("Frame")
+    bgFill.BackgroundColor3=C.Accent; bgFill.BackgroundTransparency=1
+    bgFill.BorderSizePixel=0; bgFill.Size=UDim2.new(1,0,1,0); bgFill.Parent=wrap
+    local _bfc = Instance.new("UICorner"); _bfc.CornerRadius=UDim.new(0,6); _bfc.Parent=bgFill
+
+    local bar = Instance.new("Frame")
+    bar.BackgroundColor3=C.Accent; bar.BorderSizePixel=0
+    bar.Position=UDim2.new(0,-8,0.5,-14); bar.Size=UDim2.new(0,3,0,28)
+    bar.Visible=false; bar.Parent=wrap
+    local _bc = Instance.new("UICorner"); _bc.CornerRadius=UDim.new(1,0); _bc.Parent=bar
+
+    local sym = Instance.new("TextLabel"); sym.Parent=wrap
+    sym.BackgroundTransparency=1
+    sym.Position=UDim2.new(0,4,0,0); sym.Size=UDim2.new(0,22,1,0)
+    sym.Font=Enum.Font.Code; sym.Text=_tabSym[name] or "·"
+    sym.TextColor3=C.SubText; sym.TextSize=14
+    sym.TextXAlignment=Enum.TextXAlignment.Center
+
+    local btn = Instance.new("TextButton"); btn.Name=name.."Tab"; btn.Parent=wrap
+    btn.BackgroundTransparency=1; btn.BorderSizePixel=0
+    btn.Position=UDim2.new(0,28,0,0); btn.Size=UDim2.new(1,-28,1,0)
+    btn.Font=Enum.Font.GothamSemibold; btn.Text=name
+    btn.TextColor3=C.SubText; btn.TextSize=13
+    btn.TextXAlignment=Enum.TextXAlignment.Left
+
+    local page = Instance.new("ScrollingFrame"); page.Name=name.."Page"
+    page.Parent=ContentHolder; page.BackgroundTransparency=1
+    page.BorderSizePixel=0; page.Size=UDim2.new(1,0,1,0)
+    page.CanvasSize=UDim2.new(0,0,0,0); page.ScrollBarThickness=3
+    page.ScrollBarImageColor3=C.Accent; page.AutomaticCanvasSize=Enum.AutomaticSize.Y
+    page.Visible=false; page.ScrollingDirection=Enum.ScrollingDirection.Y
+    local _pl=Instance.new("UIListLayout"); _pl.Padding=UDim.new(0,5)
+    _pl.SortOrder=Enum.SortOrder.LayoutOrder; _pl.Parent=page
+    local _pp=Instance.new("UIPadding")
+    _pp.PaddingLeft=UDim.new(0,12); _pp.PaddingRight=UDim.new(0,12)
+    _pp.PaddingTop=UDim.new(0,10); _pp.PaddingBottom=UDim.new(0,8); _pp.Parent=page
+
+    tabs[name]={btn=btn,page=page,bar=bar,bgFill=bgFill,sym=sym}
+
+    btn.MouseEnter:Connect(function()
+        if activeTab~=name then applyTween(bgFill,{BackgroundTransparency=0.9},0.08) end end)
+    btn.MouseLeave:Connect(function()
+        if activeTab~=name then applyTween(bgFill,{BackgroundTransparency=1},0.08) end end)
+    btn.MouseButton1Click:Connect(function()
+        if activeTab then
+            local p=tabs[activeTab]
+            applyTween(p.bgFill,{BackgroundTransparency=1},0.1)
+            p.bar.Visible=false; p.btn.TextColor3=C.SubText; p.sym.TextColor3=C.SubText
+            p.page.Visible=false
+        end
+        activeTab=name
+        applyTween(bgFill,{BackgroundTransparency=0.84},0.1)
+        bar.Visible=true; btn.TextColor3=C.Accent; sym.TextColor3=C.Accent
+        page.Visible=true
+    end)
+    return page
+end
+
+local PagesMap={}
+for i,n in ipairs(tabNames) do PagesMap[n]=makeTab(n,i) end
+
+do
+    local d=tabs["Commands"]
+    d.bgFill.BackgroundTransparency=0.84; d.bar.Visible=true
+    d.btn.TextColor3=C.Accent; d.sym.TextColor3=C.Accent
+    d.page.Visible=true; activeTab="Commands"
+end
+
+local _sbDiv = Instance.new("Frame"); _sbDiv.Parent = Sidebar
+_sbDiv.BackgroundColor3=C.Border; _sbDiv.BackgroundTransparency=0.4
+_sbDiv.BorderSizePixel=0; _sbDiv.Size=UDim2.new(1,0,0,1)
+_sbDiv.LayoutOrder=6
+
+local _sbBot = Instance.new("TextLabel"); _sbBot.Parent=Sidebar
+_sbBot.BackgroundTransparency=1; _sbBot.AnchorPoint=Vector2.new(0,1)
+_sbBot.Position=UDim2.new(0,8,1,-6); _sbBot.Size=UDim2.new(1,-16,0,12)
+_sbBot.Font=Enum.Font.Code; _sbBot.Text="Siriguela v"..Siriguela_Version.." · phantom"
+_sbBot.TextColor3=C.Border; _sbBot.TextSize=9
+_sbBot.TextXAlignment=Enum.TextXAlignment.Left
+
+-- HELPER WIDGETS
+local function makeSection(parent,text,order)
+    local f=Instance.new("Frame")
+    f.BackgroundTransparency=1; f.BorderSizePixel=0
+    f.Size=UDim2.new(1,0,0,28); f.LayoutOrder=order or 0; f.Parent=parent
+    local line=Instance.new("Frame"); line.BackgroundColor3=C.Border
+    line.BackgroundTransparency=0.3; line.BorderSizePixel=0
+    line.Position=UDim2.new(0,0,0.5,0); line.Size=UDim2.new(1,0,0,1); line.Parent=f
+    local bg=Instance.new("Frame"); bg.BackgroundColor3=C.Main
+    bg.BorderSizePixel=0; bg.AnchorPoint=Vector2.new(0,0.5)
+    bg.Position=UDim2.new(0,0,0.5,0); bg.AutomaticSize=Enum.AutomaticSize.X
+    bg.Size=UDim2.new(0,0,0,20); bg.Parent=f
+    local _bgl=Instance.new("UIPadding"); _bgl.PaddingLeft=UDim.new(0,0)
+    _bgl.PaddingRight=UDim.new(0,8); _bgl.Parent=bg
+    local dot=Instance.new("Frame"); dot.BackgroundColor3=C.Accent
+    dot.BorderSizePixel=0; dot.Size=UDim2.new(0,6,0,6)
+    dot.AnchorPoint=Vector2.new(0,0.5); dot.Position=UDim2.new(0,0,0.5,0); dot.Parent=bg
+    local _dc=Instance.new("UICorner"); _dc.CornerRadius=UDim.new(1,0); _dc.Parent=dot
+    local l=Instance.new("TextLabel"); l.BackgroundTransparency=1
+    l.Position=UDim2.new(0,10,0,0); l.Size=UDim2.new(1,-10,1,0)
+    l.Font=Enum.Font.GothamBold; l.Text=text:upper()
+    l.TextColor3=C.Accent; l.TextSize=10
+    l.TextXAlignment=Enum.TextXAlignment.Left; l.Parent=bg
+    themeReg(l,"TextColor3","Accent"); themeReg(dot,"BackgroundColor3","Accent")
+    themeReg(bg,"BackgroundColor3","Main"); themeReg(line,"BackgroundColor3","Border")
+    return f
+end
+
+local function makeRowBtn(parent,labelText,btnText,order,callback)
+    local row=Instance.new("Frame")
+    row.BackgroundColor3=C.Secondary; row.BorderSizePixel=0
+    row.Size=UDim2.new(1,0,0,36); row.LayoutOrder=order or 0; row.Parent=parent
+    local _rc=Instance.new("UICorner"); _rc.CornerRadius=UDim.new(0,6); _rc.Parent=row
+    local lbl=Instance.new("TextLabel"); lbl.Parent=row
+    lbl.BackgroundTransparency=1; lbl.Position=UDim2.new(0,12,0,0)
+    lbl.Size=UDim2.new(1,-110,1,0); lbl.Font=Enum.Font.Gotham
+    lbl.Text=labelText; lbl.TextColor3=C.Text; lbl.TextSize=13
+    lbl.TextXAlignment=Enum.TextXAlignment.Left
+    local btn=Instance.new("TextButton"); btn.Parent=row
+    btn.BackgroundColor3=C.Accent; btn.BorderSizePixel=0
+    btn.Position=UDim2.new(1,-98,0.5,-13); btn.Size=UDim2.new(0,86,0,26)
+    btn.Font=Enum.Font.GothamBold; btn.Text=btnText
+    btn.TextColor3=C.TitleBar; btn.TextSize=12
+    local _bbc=Instance.new("UICorner"); _bbc.CornerRadius=UDim.new(0,5); _bbc.Parent=btn
+    themeReg(row,"BackgroundColor3","Secondary"); themeReg(lbl,"TextColor3","Text")
+    themeReg(btn,"BackgroundColor3","Accent"); themeReg(btn,"TextColor3","TitleBar")
+    btn.MouseButton1Click:Connect(function() if callback then callback() end end)
+    return row,btn
+end
+
+local function makeToggleRow(parent,labelText,order,default,callback)
+    local row=Instance.new("Frame")
+    row.BackgroundColor3=C.Secondary; row.BorderSizePixel=0
+    row.Size=UDim2.new(1,0,0,36); row.LayoutOrder=order or 0; row.Parent=parent
+    local _rc=Instance.new("UICorner"); _rc.CornerRadius=UDim.new(0,6); _rc.Parent=row
+    local lbl=Instance.new("TextLabel"); lbl.Parent=row
+    lbl.BackgroundTransparency=1; lbl.Position=UDim2.new(0,12,0,0)
+    lbl.Size=UDim2.new(1,-66,1,0); lbl.Font=Enum.Font.Gotham
+    lbl.Text=labelText; lbl.TextColor3=C.Text; lbl.TextSize=13
+    lbl.TextXAlignment=Enum.TextXAlignment.Left
+    local state=default or false
+    local tgl=Instance.new("TextButton"); tgl.Parent=row
+    tgl.Size=UDim2.new(0,46,0,24); tgl.Position=UDim2.new(1,-56,0.5,-12)
+    tgl.BackgroundColor3=state and C.Accent or C.Border
+    tgl.BorderSizePixel=0; tgl.Text=""
+    local _tc=Instance.new("UICorner"); _tc.CornerRadius=UDim.new(1,0); _tc.Parent=tgl
+    local knob=Instance.new("Frame"); knob.Parent=tgl
+    knob.BackgroundColor3=Color3.fromRGB(255,255,255); knob.BorderSizePixel=0
+    knob.Size=UDim2.new(0,18,0,18)
+    knob.Position=state and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    local _kc=Instance.new("UICorner"); _kc.CornerRadius=UDim.new(1,0); _kc.Parent=knob
+    themeReg(row,"BackgroundColor3","Secondary"); themeReg(lbl,"TextColor3","Text")
+    themeRegFunc(function() tgl.BackgroundColor3=state and C.Accent or C.Border end)
+    local function vis(s)
+        applyTween(tgl,{BackgroundColor3=s and C.Accent or C.Border},0.12)
+        applyTween(knob,{Position=s and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)},0.12)
+    end
+    tgl.MouseButton1Click:Connect(function()
+        state=not state; vis(state); if callback then callback(state) end
+    end)
+    local function ext(ns) if ns==state then return end; state=ns; vis(state) end
+    return row,tgl,function() return state end,ext
+end
+
+local function makeSliderRow(parent,labelText,order,min,max,default,callback)
+    local row=Instance.new("Frame")
+    row.BackgroundColor3=C.Secondary; row.BorderSizePixel=0
+    row.Size=UDim2.new(1,0,0,50); row.LayoutOrder=order or 0; row.Parent=parent
+    local _rc=Instance.new("UICorner"); _rc.CornerRadius=UDim.new(0,6); _rc.Parent=row
+    local lbl=Instance.new("TextLabel"); lbl.Parent=row
+    lbl.BackgroundTransparency=1; lbl.Position=UDim2.new(0,12,0,5)
+    lbl.Size=UDim2.new(1,-60,0,20); lbl.Font=Enum.Font.Gotham
+    lbl.Text=labelText; lbl.TextColor3=C.Text; lbl.TextSize=13
+    lbl.TextXAlignment=Enum.TextXAlignment.Left
+    local valLbl=Instance.new("TextLabel"); valLbl.Parent=row
+    valLbl.BackgroundTransparency=1; valLbl.Position=UDim2.new(1,-52,0,5)
+    valLbl.Size=UDim2.new(0,46,0,20); valLbl.Font=Enum.Font.GothamBold
+    valLbl.Text=tostring(default); valLbl.TextColor3=C.Accent; valLbl.TextSize=13
+    valLbl.TextXAlignment=Enum.TextXAlignment.Right
+    local track=Instance.new("Frame"); track.Parent=row
+    track.BackgroundColor3=C.Border; track.BorderSizePixel=0
+    track.Position=UDim2.new(0,12,1,-18); track.Size=UDim2.new(1,-18,0,6)
+    local _trc=Instance.new("UICorner"); _trc.CornerRadius=UDim.new(1,0); _trc.Parent=track
+    local pct=(default-min)/(max-min)
+    local fill=Instance.new("Frame"); fill.Parent=track
+    fill.BackgroundColor3=C.Accent; fill.BorderSizePixel=0; fill.Size=UDim2.new(pct,0,1,0)
+    local _fc=Instance.new("UICorner"); _fc.CornerRadius=UDim.new(1,0); _fc.Parent=fill
+    local handle=Instance.new("TextButton"); handle.Parent=track
+    handle.BackgroundColor3=Color3.fromRGB(255,255,255); handle.BorderSizePixel=0
+    handle.Size=UDim2.new(0,14,0,14); handle.Position=UDim2.new(pct,-7,0.5,-7); handle.Text=""
+    local _hc=Instance.new("UICorner"); _hc.CornerRadius=UDim.new(1,0); _hc.Parent=handle
+    themeReg(row,"BackgroundColor3","Secondary"); themeReg(lbl,"TextColor3","Text")
+    themeReg(valLbl,"TextColor3","Accent"); themeReg(track,"BackgroundColor3","Border")
+    themeReg(fill,"BackgroundColor3","Accent")
+    local _sl=false
+    local function _sliderMove(inputPos)
+        local ta=track.AbsolutePosition; local ts=track.AbsoluteSize
+        local rx=math.clamp(inputPos.X-ta.X,0,ts.X); local p=rx/ts.X
+        local val=math.floor(min+p*(max-min))
+        valLbl.Text=tostring(val); fill.Size=UDim2.new(p,0,1,0)
+        handle.Position=UDim2.new(p,-7,0.5,-7); if callback then callback(val) end
+    end
+    handle.MouseButton1Down:Connect(function() _sl=true end)
+    handle.InputBegan:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.Touch then _sl=true end end)
+    UserInputService.InputEnded:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+            _sl=false end end)
+    UserInputService.InputChanged:Connect(function(i)
+        if _sl and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
+            _sliderMove(i.Position)
+        end end)
+    return row
+end
+
+-- NOTIFICATIONS
+local NotifHolder=Instance.new("Frame"); NotifHolder.Name="NotifHolder"
+NotifHolder.Parent=ScreenGui; NotifHolder.BackgroundTransparency=1
+NotifHolder.Position=UDim2.new(1,-318,1,-18); NotifHolder.Size=UDim2.new(0,300,1,0)
+NotifHolder.AnchorPoint=Vector2.new(0,1)
+local _nhl=Instance.new("UIListLayout"); _nhl.FillDirection=Enum.FillDirection.Vertical
+_nhl.VerticalAlignment=Enum.VerticalAlignment.Bottom; _nhl.SortOrder=Enum.SortOrder.LayoutOrder
+_nhl.Padding=UDim.new(0,5); _nhl.Parent=NotifHolder
+
+local _nc=0
+Siriguela_NotifyFunc=function(title,msg,dur)
+    _nc=_nc+1; dur=dur or 4
+    local nf=Instance.new("Frame"); nf.BackgroundColor3=C.Secondary
+    nf.BorderSizePixel=0; nf.Size=UDim2.new(1,0,0,62)
+    nf.LayoutOrder=_nc; nf.BackgroundTransparency=1; nf.Parent=NotifHolder
+    local _nfc=Instance.new("UICorner"); _nfc.CornerRadius=UDim.new(0,8); _nfc.Parent=nf
+    local _nfs=Instance.new("UIStroke"); _nfs.Color=C.Accent
+    _nfs.Thickness=1; _nfs.Transparency=0.65; _nfs.Parent=nf
+    local _acol=Instance.new("Frame"); _acol.BackgroundColor3=C.Accent
+    _acol.BorderSizePixel=0; _acol.Position=UDim2.new(0,0,0.5,-24)
+    _acol.Size=UDim2.new(0,3,0,48); _acol.Parent=nf
+    local _acolc=Instance.new("UICorner"); _acolc.CornerRadius=UDim.new(1,0); _acolc.Parent=_acol
+    local nt=Instance.new("TextLabel"); nt.BackgroundTransparency=1
+    nt.Position=UDim2.new(0,14,0,10); nt.Size=UDim2.new(1,-18,0,17)
+    nt.Font=Enum.Font.GothamBold; nt.Text=tostring(title)
+    nt.TextColor3=C.Accent; nt.TextSize=13; nt.TextXAlignment=Enum.TextXAlignment.Left; nt.Parent=nf
+    local nm=Instance.new("TextLabel"); nm.BackgroundTransparency=1
+    nm.Position=UDim2.new(0,14,0,28); nm.Size=UDim2.new(1,-18,0,20)
+    nm.Font=Enum.Font.Gotham; nm.Text=tostring(msg)
+    nm.TextColor3=C.SubText; nm.TextSize=12; nm.TextXAlignment=Enum.TextXAlignment.Left
+    nm.TextWrapped=true; nm.Parent=nf
+    local drainBg=Instance.new("Frame"); drainBg.BackgroundColor3=C.Border
+    drainBg.BackgroundTransparency=0.4; drainBg.BorderSizePixel=0
+    drainBg.Position=UDim2.new(0,3,1,-5); drainBg.Size=UDim2.new(1,-6,0,3); drainBg.Parent=nf
+    local _dbc=Instance.new("UICorner"); _dbc.CornerRadius=UDim.new(1,0); _dbc.Parent=drainBg
+    local drain=Instance.new("Frame"); drain.BackgroundColor3=C.Accent
+    drain.BorderSizePixel=0; drain.Size=UDim2.new(1,0,1,0); drain.Parent=drainBg
+    local _dc2=Instance.new("UICorner"); _dc2.CornerRadius=UDim.new(1,0); _dc2.Parent=drain
+    applyTween(nf,{BackgroundTransparency=0},0.15)
+    applyTween(drain,{Size=UDim2.new(0,0,1,0)},dur)
+    task.delay(dur,function()
+        applyTween(nf,{BackgroundTransparency=1},0.25)
+        applyTween(nt,{TextTransparency=1},0.25); applyTween(nm,{TextTransparency=1},0.25)
+        task.wait(0.28); nf:Destroy()
+    end)
+end
+
+-- COMMAND BAR
+local CmdBarBg=Instance.new("Frame"); CmdBarBg.Name="CmdBarBg"
+CmdBarBg.Parent=MainFrame; CmdBarBg.BackgroundColor3=C.TitleBar
+CmdBarBg.BorderSizePixel=0; CmdBarBg.Position=UDim2.new(0,0,1,-44)
+CmdBarBg.Size=UDim2.new(1,0,0,44)
+local _cbbc=Instance.new("UICorner"); _cbbc.CornerRadius=UDim.new(0,10); _cbbc.Parent=CmdBarBg
+local CmdBarFix=Instance.new("Frame"); CmdBarFix.BackgroundColor3=C.TitleBar
+CmdBarFix.BorderSizePixel=0; CmdBarFix.Size=UDim2.new(1,0,0.5,0); CmdBarFix.Parent=CmdBarBg
+local CmdSep=Instance.new("Frame"); CmdSep.BackgroundColor3=C.Border
+CmdSep.BackgroundTransparency=0.3; CmdSep.BorderSizePixel=0
+CmdSep.Size=UDim2.new(1,0,0,1); CmdSep.Parent=CmdBarBg
+
+local PrefixLabel=Instance.new("TextLabel"); PrefixLabel.BackgroundTransparency=1
+PrefixLabel.Position=UDim2.new(0,14,0.5,-10); PrefixLabel.Size=UDim2.new(0,22,0,20)
+PrefixLabel.Font=Enum.Font.Code; PrefixLabel.Text=Siriguela_Prefix
+PrefixLabel.TextColor3=C.Accent; PrefixLabel.TextSize=15; PrefixLabel.Parent=CmdBarBg
+
+local CmdBar=Instance.new("TextBox"); CmdBar.Name="CmdBar"
+CmdBar.Parent=CmdBarBg; CmdBar.BackgroundColor3=C.Secondary
+CmdBar.BorderSizePixel=0; CmdBar.Position=UDim2.new(0,38,0.5,-13)
+CmdBar.Size=UDim2.new(1,-136,0,26); CmdBar.Font=Enum.Font.Code
+CmdBar.PlaceholderText="type command..."; CmdBar.PlaceholderColor3=C.SubText
+CmdBar.Text=""; CmdBar.TextColor3=C.Text; CmdBar.TextSize=13
+CmdBar.ClearTextOnFocus=false
+local _cbc=Instance.new("UICorner"); _cbc.CornerRadius=UDim.new(0,6); _cbc.Parent=CmdBar
+local _cbs=Instance.new("UIStroke"); _cbs.Color=C.Accent; _cbs.Thickness=1
+_cbs.Transparency=0.75; _cbs.Parent=CmdBar
+
+local RunBtn=Instance.new("TextButton"); RunBtn.BackgroundColor3=C.Accent
+RunBtn.BorderSizePixel=0; RunBtn.Position=UDim2.new(1,-90,0.5,-13)
+RunBtn.Size=UDim2.new(0,78,0,26); RunBtn.Font=Enum.Font.GothamBold
+RunBtn.Text="EXEC"; RunBtn.TextColor3=C.TitleBar; RunBtn.TextSize=12; RunBtn.Parent=CmdBarBg
+local _rbc=Instance.new("UICorner"); _rbc.CornerRadius=UDim.new(0,5); _rbc.Parent=RunBtn
+
+MinBtn.MouseButton1Click:Connect(function()
+    local isMobile=UserInputService.TouchEnabled
+    local vp=workspace.CurrentCamera.ViewportSize
+    local guiW=isMobile and math.min(800,vp.X-10) or 800
+    local guiH=isMobile and math.max(220,math.min(520,vp.Y-16)) or 520
+    if Siriguela_Minimized then
+        applyTween(MainFrame,{Size=UDim2.new(0,guiW,0,guiH)},0.22)
+        task.wait(0.23)
+        Sidebar.Visible=true; SidebarSep.Visible=true
+        ContentHolder.Visible=true; CmdBarBg.Visible=true
+        Siriguela_Minimized=false; MinBtn.Text="—"
+    else
+        Sidebar.Visible=false; SidebarSep.Visible=false
+        ContentHolder.Visible=false; CmdBarBg.Visible=false
+        applyTween(MainFrame,{Size=UDim2.new(0,guiW,0,44)},0.22)
+        Siriguela_Minimized=true; MinBtn.Text="▢"
+    end
+end)
+
+-- COMMAND ENGINE
+local cmds={}
+local function registerCmd(name,aliases,desc,func)
+    cmds[name:lower()]={name=name,aliases=aliases,desc=desc,func=func}
+    for _,a in ipairs(aliases) do cmds[a:lower()]=cmds[name:lower()] end
+end
+
+local function execCmd(input)
+    input=input:match("^%s*(.-)%s*$"); if input=="" then return end
+    for alias,real in pairs(Siriguela_Aliases) do
+        if input:lower():sub(1,#alias)==alias:lower() then
+            input=real..input:sub(#alias+1); break end end
+    local parts={}; for p in input:gmatch("%S+") do table.insert(parts,p) end
+    local cmdName=(parts[1] or ""):lower(); local args={}
+    for i=2,#parts do table.insert(args,parts[i]) end
+    table.insert(Siriguela_CmdHistory,input)
+    if #Siriguela_CmdHistory>50 then table.remove(Siriguela_CmdHistory,1) end
+    Siriguela_HistoryIdx=#Siriguela_CmdHistory+1; addLog("CMD: "..input)
+    local cmd=cmds[cmdName]
+    if cmd then
+        local ok,err=pcall(cmd.func,args)
+        if not ok then notify("Error",tostring(err),4); addLog("ERR: "..tostring(err)) end
+    else
+        notify("Unknown",cmdName.." — type 'cmds' to list",3); addLog("UNKNOWN: "..cmdName)
+    end
+end
+
+RunBtn.MouseButton1Click:Connect(function() execCmd(CmdBar.Text); CmdBar.Text="" end)
+
+local function syncCharToggle(key,state)
+    if Siriguela_CharToggles and Siriguela_CharToggles[key] then Siriguela_CharToggles[key](state) end
+end
+
+CmdBar.FocusLost:Connect(function(enter)
+    if enter then execCmd(CmdBar.Text); CmdBar.Text="" end
+end)
+
+-- AUTOCOMPLETE
+local AutoCompleteFrame=Instance.new("Frame")
+AutoCompleteFrame.Name="AutoComplete"; AutoCompleteFrame.BackgroundColor3=C.Secondary
+AutoCompleteFrame.BorderSizePixel=0; AutoCompleteFrame.Position=UDim2.new(0,38,0,-88)
+AutoCompleteFrame.Size=UDim2.new(0,360,0,84); AutoCompleteFrame.Visible=false
+AutoCompleteFrame.ZIndex=10; AutoCompleteFrame.Parent=CmdBarBg
+local _acC=Instance.new("UICorner"); _acC.CornerRadius=UDim.new(0,7); _acC.Parent=AutoCompleteFrame
+local _acS=Instance.new("UIStroke"); _acS.Color=C.Border; _acS.Thickness=1
+_acS.Parent=AutoCompleteFrame
+
+local AcBtns={}
+local AC_MAX=3
+for i=1,AC_MAX do
+    local ab=Instance.new("TextButton"); ab.BackgroundTransparency=1
+    ab.BorderSizePixel=0; ab.Position=UDim2.new(0,0,0,(i-1)*28)
+    ab.Size=UDim2.new(1,0,0,28); ab.Font=Enum.Font.Code
+    ab.Text=""; ab.TextColor3=C.Accent; ab.TextSize=13
+    ab.TextXAlignment=Enum.TextXAlignment.Left; ab.ZIndex=11; ab.Visible=false; ab.Parent=AutoCompleteFrame
+    local _p=Instance.new("UIPadding"); _p.PaddingLeft=UDim.new(0,10); _p.Parent=ab
+    themeReg(ab,"TextColor3","Accent"); AcBtns[i]=ab
+end
+
+local _AcConns={}
+local function updateAutocomplete(text)
+    if not Siriguela_AutocompleteOn then AutoCompleteFrame.Visible=false; return end
+    local bare=text:sub(#Siriguela_Prefix+1):lower()
+    if bare:find("%s") or bare=="" then AutoCompleteFrame.Visible=false; return end
+    -- Score matches: prefix match scores highest, name substring next, description match last
+    local scored={}; local seen={}
+    for k,v in pairs(cmds) do
+        if v.name and not seen[v.name] then
+            seen[v.name]=true
+            local score=0
+            local nameL=v.name:lower()
+            if nameL:sub(1,#bare)==bare then score=3           -- prefix match on name
+            elseif nameL:find(bare,1,true) then score=2        -- substring match on name
+            else
+                -- check all aliases
+                for _,al in ipairs(v.aliases or {}) do
+                    local alL=al:lower()
+                    if alL:sub(1,#bare)==bare then score=2; break
+                    elseif alL:find(bare,1,true) then score=1; break end
+                end
+                -- check description keywords
+                if score==0 and v.desc and v.desc:lower():find(bare,1,true) then score=1 end
+            end
+            if score>0 then table.insert(scored,{name=v.name,score=score}) end
+        end
+    end
+    -- Sort: higher score first, then alphabetically
+    table.sort(scored,function(a,b)
+        if a.score~=b.score then return a.score>b.score end
+        return a.name<b.name
+    end)
+    local count=math.min(#scored,AC_MAX)
+    -- Disconnect stale connections FIRST to prevent wrong-command bug
+    for i=1,AC_MAX do if _AcConns[i] then _AcConns[i]:Disconnect(); _AcConns[i]=nil end end
+    for i=1,AC_MAX do
+        if i<=count then
+            AcBtns[i].Text=Siriguela_Prefix..scored[i].name; AcBtns[i].Visible=true
+            local _cap=scored[i].name
+            _AcConns[i]=AcBtns[i].MouseButton1Click:Connect(function()
+                CmdBar.Text=Siriguela_Prefix.._cap.." "; CmdBar:CaptureFocus()
+                CmdBar.CursorPosition=#CmdBar.Text+1; AutoCompleteFrame.Visible=false
+            end)
+        else AcBtns[i].Text=""; AcBtns[i].Visible=false end
+    end
+    AutoCompleteFrame.Size=UDim2.new(0,360,0,count*28); AutoCompleteFrame.Visible=(count>0)
+end
+
+CmdBar:GetPropertyChangedSignal("Text"):Connect(function() updateAutocomplete(CmdBar.Text) end)
+CmdBar.FocusLost:Connect(function()
+    task.delay(0.12,function() AutoCompleteFrame.Visible=false end) end)
+CmdBar.Focused:Connect(function()
+    if CmdBar.Text~="" then updateAutocomplete(CmdBar.Text) end end)
+
+UserInputService.InputBegan:Connect(function(input,gpe)
+    if gpe then return end
+    if input.KeyCode==Enum.KeyCode.Up and CmdBar:IsFocused() then
+        if Siriguela_HistoryIdx>1 then Siriguela_HistoryIdx=Siriguela_HistoryIdx-1
+            CmdBar.Text=Siriguela_CmdHistory[Siriguela_HistoryIdx] or "" end
+    elseif input.KeyCode==Enum.KeyCode.Down and CmdBar:IsFocused() then
+        if Siriguela_HistoryIdx<#Siriguela_CmdHistory then
+            Siriguela_HistoryIdx=Siriguela_HistoryIdx+1; CmdBar.Text=Siriguela_CmdHistory[Siriguela_HistoryIdx] or ""
+        else Siriguela_HistoryIdx=#Siriguela_CmdHistory+1; CmdBar.Text="" end
+    end
+    if input.KeyCode==Siriguela_OpenKey then
+        MainFrame.Visible=not MainFrame.Visible; Siriguela_Visible=MainFrame.Visible end
+end)
+
+-- COMMANDS PAGE
+local CmdPage=PagesMap["Commands"]
+
+local _searchBg=Instance.new("Frame"); _searchBg.BackgroundColor3=C.Secondary
+_searchBg.BorderSizePixel=0; _searchBg.Size=UDim2.new(1,0,0,34)
+_searchBg.LayoutOrder=1; _searchBg.Parent=CmdPage
+local _sbc=Instance.new("UICorner"); _sbc.CornerRadius=UDim.new(0,6); _sbc.Parent=_searchBg
+local _sbs=Instance.new("UIStroke"); _sbs.Color=C.Accent; _sbs.Thickness=1
+_sbs.Transparency=0.7; _sbs.Parent=_searchBg
+local _searchIcon=Instance.new("TextLabel"); _searchIcon.Parent=_searchBg
+_searchIcon.BackgroundTransparency=1; _searchIcon.Position=UDim2.new(0,10,0,0)
+_searchIcon.Size=UDim2.new(0,18,1,0); _searchIcon.Font=Enum.Font.Code
+_searchIcon.Text="?"; _searchIcon.TextColor3=C.SubText; _searchIcon.TextSize=14
+local _searchBox=Instance.new("TextBox"); _searchBox.Parent=_searchBg
+_searchBox.BackgroundTransparency=1; _searchBox.BorderSizePixel=0
+_searchBox.Position=UDim2.new(0,30,0.5,-10); _searchBox.Size=UDim2.new(1,-38,0,20)
+_searchBox.Font=Enum.Font.Code; _searchBox.PlaceholderText="search commands..."
+_searchBox.PlaceholderColor3=C.SubText; _searchBox.Text=""
+_searchBox.TextColor3=C.Text; _searchBox.TextSize=12; _searchBox.ClearTextOnFocus=false
+themeReg(_searchBg,"BackgroundColor3","Secondary"); themeReg(_searchBox,"TextColor3","Text")
+
+makeSection(CmdPage,"All Commands",2)
+
+local cmdListFrame=Instance.new("Frame"); cmdListFrame.BackgroundTransparency=1
+cmdListFrame.Size=UDim2.new(1,0,0,0); cmdListFrame.AutomaticSize=Enum.AutomaticSize.Y
+cmdListFrame.LayoutOrder=3; cmdListFrame.Parent=CmdPage
+local _cll=Instance.new("UIListLayout"); _cll.Padding=UDim.new(0,3)
+_cll.SortOrder=Enum.SortOrder.LayoutOrder; _cll.Parent=cmdListFrame
+
+local _allCmdRows={}
+
+local function addCmdEntry(name,desc,lo)
+    local row=Instance.new("Frame"); row.BackgroundColor3=C.Secondary
+    row.BackgroundTransparency=0.18; row.BorderSizePixel=0
+    row.Size=UDim2.new(1,0,0,36); row.LayoutOrder=lo; row.Parent=cmdListFrame
+    local _rc=Instance.new("UICorner"); _rc.CornerRadius=UDim.new(0,5); _rc.Parent=row
+    local nl=Instance.new("TextLabel"); nl.BackgroundTransparency=1
+    nl.Position=UDim2.new(0,10,0,3); nl.Size=UDim2.new(0.44,-10,0,15)
+    nl.Font=Enum.Font.GothamBold; nl.Text=Siriguela_Prefix..name
+    nl.TextColor3=C.Accent; nl.TextSize=12; nl.TextXAlignment=Enum.TextXAlignment.Left; nl.Parent=row
+    local dl=Instance.new("TextLabel"); dl.BackgroundTransparency=1
+    dl.Position=UDim2.new(0,10,0,20); dl.Size=UDim2.new(1,-14,0,13)
+    dl.Font=Enum.Font.Gotham; dl.Text=desc; dl.TextColor3=C.SubText; dl.TextSize=11
+    dl.TextXAlignment=Enum.TextXAlignment.Left; dl.TextWrapped=true; dl.Parent=row
+    themeReg(nl,"TextColor3","Accent"); themeReg(dl,"TextColor3","SubText")
+    table.insert(_allCmdRows,{row=row,name=name:lower(),desc=desc:lower()})
+end
+
+_searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local q=_searchBox.Text:lower():match("^%s*(.-)%s*$")
+    if q=="" then
+        for _,e in ipairs(_allCmdRows) do e.row.Visible=true end
+    else
+        for _,e in ipairs(_allCmdRows) do
+            e.row.Visible=(e.name:find(q,1,true) or e.desc:find(q,1,true)) and true or false
+        end
+    end
+end)
+
+local cmdIdx=0
+local function reg(name,aliases,desc,func)
+    cmdIdx=cmdIdx+1; registerCmd(name,aliases,desc,func)
+    addCmdEntry(name..(#aliases>0 and (" / "..aliases[1]) or ""),desc,cmdIdx)
+end
+
+-- ============================================================
+-- ALL COMMANDS
+-- ============================================================
+
+reg("speed",{"ws","walkspeed"},"Set walkspeed. Usage: speed [value]",function(args)
+    local val=tonumber(args[1]) or 16; Siriguela_SpeedVal=val
+    local h=getHuman(getChar()); if h then h.WalkSpeed=val end
+    notify("Speed","WalkSpeed set to "..val); addLog("Speed → "..val)
+end)
+reg("jump",{"jp","jumppower"},"Set jump power. Usage: jump [value]",function(args)
+    local val=tonumber(args[1]) or 50; Siriguela_JumpVal=val
+    local h=getHuman(getChar())
+    if h then h.JumpPower=val; h.UseJumpPower=true end
+    notify("Jump","JumpPower set to "..val)
+end)
+reg("god",{"gm"},"Toggle god mode",function()
+    Siriguela_GodMode=not Siriguela_GodMode
+    local h=getHuman(getChar())
+    if h then if Siriguela_GodMode then h.MaxHealth=math.huge; h.Health=math.huge
+        else h.MaxHealth=100; h.Health=100 end end
+    syncCharToggle("god",Siriguela_GodMode); notify("God Mode",Siriguela_GodMode and "Enabled" or "Disabled")
+end)
+reg("invis",{"invisible","nv"},"Toggle invisibility (LocalTransparency)",function()
+    local char=getChar(); if not char then return end
+    for _,v in ipairs(char:GetDescendants()) do
+        if v:IsA("BasePart") and v.Name~="HumanoidRootPart" then
+            v.LocalTransparencyModifier=Siriguela_GodMode and 0 or 1 end end
+    notify("Invisible","Toggled")
+end)
+reg("noclip",{"nc"},"Toggle noclip (fly through walls)",function()
+    Siriguela_Noclip=not Siriguela_Noclip; syncCharToggle("noclip",Siriguela_Noclip)
+    notify("Noclip",Siriguela_Noclip and "Enabled" or "Disabled")
+end)
+reg("tp",{"teleport"},"Teleport to player. Usage: tp [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("TP Error","Player not found"); return end
+    local root=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+    if root and tRoot then root.CFrame=tRoot.CFrame+Vector3.new(0,3,0); notify("Teleport","Teleported to "..target.Name) end
+end)
+reg("bring",{"br"},"Bring player to you. Usage: bring [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Bring","Player not found"); return end
+    local myRoot=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+    if myRoot and tRoot then tRoot.CFrame=myRoot.CFrame+Vector3.new(3,0,0); notify("Bring","Brought "..target.Name) end
+end)
+reg("kill",{"k"},"Kill your own character",function()
+    local h=getHuman(getChar()); if h then h.Health=0 end; notify("Kill","Character killed")
+end)
+reg("respawn",{"rs","re"},"Respawn your character",function()
+    LP:LoadCharacter(); notify("Respawn","Respawning...")
+end)
+reg("fly",{"fl"},"Toggle fly mode",function()
+    Siriguela_FlyEnabled=not Siriguela_FlyEnabled; syncCharToggle("fly",Siriguela_FlyEnabled)
+    notify("Fly",Siriguela_FlyEnabled and "Enabled" or "Disabled")
+    if Siriguela_FlyEnabled then
+        task.spawn(function()
+            local char=getChar(); local root=getRoot(char); local human=getHuman(char)
+            if not root or not human then Siriguela_FlyEnabled=false; syncCharToggle("fly",false); return end
+            human.PlatformStand=true
+            local bv=Instance.new("BodyVelocity"); bv.Velocity=Vector3.zero
+            bv.MaxForce=Vector3.new(1e5,1e5,1e5); bv.Parent=root
+            local bg=Instance.new("BodyGyro"); bg.MaxTorque=Vector3.new(1e5,1e5,1e5); bg.D=100; bg.Parent=root
+            RunService.RenderStepped:Connect(function()
+                if not Siriguela_FlyEnabled then bv:Destroy(); bg:Destroy(); human.PlatformStand=false; return end
+                local cf=Camera.CFrame
+                local fwd=(UserInputService:IsKeyDown(Enum.KeyCode.W) and cf.LookVector or Vector3.zero)
+                    +(UserInputService:IsKeyDown(Enum.KeyCode.S) and -cf.LookVector or Vector3.zero)
+                    +(UserInputService:IsKeyDown(Enum.KeyCode.A) and -cf.RightVector or Vector3.zero)
+                    +(UserInputService:IsKeyDown(Enum.KeyCode.D) and cf.RightVector or Vector3.zero)
+                    +(UserInputService:IsKeyDown(Enum.KeyCode.Space) and Vector3.yAxis or Vector3.zero)
+                    +(UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and -Vector3.yAxis or Vector3.zero)
+                bv.Velocity=fwd*Siriguela_FlySpeed; bg.CFrame=cf end)
+        end)
+    end
+end)
+reg("unfly",{"ufl","stopfly"},"Turn off fly mode",function()
+    if not Siriguela_FlyEnabled then notify("Unfly","Fly is already off"); return end
+    Siriguela_FlyEnabled=false; syncCharToggle("fly",false)
+    local human=getHuman(getChar()); if human then human.PlatformStand=false end
+    notify("Unfly","Fly disabled")
+end)
+reg("flyspeed",{"fs"},"Set fly speed. Usage: flyspeed [value]",function(args)
+    Siriguela_FlySpeed=tonumber(args[1]) or 60; notify("Fly Speed","Set to "..Siriguela_FlySpeed)
+end)
+reg("infjump",{"ij"},"Toggle infinite jump",function()
+    Siriguela_InfJump=not Siriguela_InfJump; syncCharToggle("infjump",Siriguela_InfJump)
+    notify("Inf Jump",Siriguela_InfJump and "Enabled" or "Disabled")
+end)
+reg("sit",{"st"},"Force your character to sit",function()
+    local h=getHuman(getChar()); if h then h.Sit=true end; notify("Sit","Sitting")
+end)
+reg("nfd",{"nofall"},"Disable fall damage",function()
+    local h=getHuman(getChar())
+    if h then h.MaxHealth=math.huge; h.Health=math.huge end
+    notify("No Fall Damage","Applied")
+end)
+reg("gravity",{"grav","gr"},"Set workspace gravity. Usage: gravity [value]",function(args)
+    local val=tonumber(args[1]) or 196; workspace.Gravity=val; notify("Gravity","Set to "..val)
+end)
+reg("fog",{"fg"},"Set fog end. Usage: fog [distance]",function(args)
+    local val=tonumber(args[1]) or 100000
+    Lighting.FogEnd=val; Lighting.FogStart=0; notify("Fog","FogEnd set to "..val)
+end)
+reg("time",{"settime"},"Set time of day. Usage: time [0-24]",function(args)
+    local val=tonumber(args[1]) or 14; Lighting.ClockTime=val; notify("Time","Set to "..val..":00")
+end)
+reg("bright",{"brightness"},"Set lighting brightness. Usage: bright [value]",function(args)
+    local val=tonumber(args[1]) or 1; Lighting.Brightness=val; notify("Brightness","Set to "..val)
+end)
+reg("antiafk",{"afk"},"Toggle anti-AFK",function()
+    Siriguela_AntiAFK=not Siriguela_AntiAFK; syncCharToggle("antiafk",Siriguela_AntiAFK)
+    notify("Anti-AFK",Siriguela_AntiAFK and "Enabled" or "Disabled")
+    if Siriguela_AntiAFK then task.spawn(function()
+        while Siriguela_AntiAFK do local h=getHuman(getChar()); if h then h.Jump=true end; task.wait(60) end end) end
+end)
+reg("cmds",{"commands","help"},"List all commands in output",function()
+    for name,data in pairs(cmds) do
+        if data.name:lower()==name then print(Siriguela_Prefix..data.name.." — "..data.desc) end end
+    notify("Commands","Check the F9 console / Output")
+end)
+reg("rejoin",{"rj"},"Rejoin the current game",function()
+    TeleportService:Teleport(game.PlaceId,LP); notify("Rejoin","Rejoining...")
+end)
+reg("quit",{"exit","leave"},"Leave the game",function() game:Shutdown() end)
+reg("prefix",{"px"},"Change command prefix. Usage: prefix [char]",function(args)
+    local p=args[1] or ";"; Siriguela_Prefix=p:sub(1,1); PrefixLabel.Text=Siriguela_Prefix
+    notify("Prefix","Changed to: "..Siriguela_Prefix)
+end)
+reg("alias",{"al"},"Set an alias. Usage: alias [alias] [command]",function(args)
+    if not args[1] or not args[2] then notify("Alias","Usage: alias [alias] [command]"); return end
+    Siriguela_Aliases[args[1]:lower()]=args[2]:lower(); notify("Alias",args[1].." → "..args[2])
+end)
+reg("setwp",{"savewp","sw"},"Save a waypoint. Usage: setwp [name]",function(args)
+    local name=args[1] or "wp"..#Siriguela_Waypoints; local root=getRoot(getChar())
+    if root then Siriguela_Waypoints[name]=root.CFrame; notify("Waypoint","Saved: "..name) end
+end)
+reg("tpwp",{"gowp","gwp"},"Teleport to waypoint. Usage: tpwp [name]",function(args)
+    local name=args[1] or ""
+    if Siriguela_Waypoints[name] then local root=getRoot(getChar())
+        if root then root.CFrame=Siriguela_Waypoints[name]; notify("Waypoint","Teleported to: "..name) end
+    else notify("Waypoint","Not found: "..name) end
+end)
+reg("heal",{"h","hp"},"Restore your health to max",function()
+    local h=getHuman(getChar()); if h then h.Health=h.MaxHealth; notify("Heal","Health restored") end
+end)
+reg("loopheal",{"lh"},"Toggle continuous healing",function()
+    Siriguela_LoopHeal=not Siriguela_LoopHeal; syncCharToggle("loopheal",Siriguela_LoopHeal)
+    notify("Loop Heal",Siriguela_LoopHeal and "Enabled" or "Disabled")
+    if Siriguela_LoopHeal then task.spawn(function()
+        while Siriguela_LoopHeal do local h=getHuman(getChar()); if h then h.Health=h.MaxHealth end; task.wait(0.1) end end) end
+end)
+reg("clicktp",{"ctp"},"Toggle click-to-teleport",function()
+    Siriguela_ClickTP=not Siriguela_ClickTP; syncCharToggle("clicktp",Siriguela_ClickTP)
+    notify("Click TP",Siriguela_ClickTP and "ON — click anywhere!" or "Disabled")
+end)
+reg("fov",{"fieldofview"},"Set camera field of view. Usage: fov [value]",function(args)
+    local val=math.clamp(tonumber(args[1]) or 70,1,120); Camera.FieldOfView=val; notify("FOV","Set to "..val)
+end)
+reg("zoom",{"maxzoom","mz"},"Set camera max zoom. Usage: zoom [value]",function(args)
+    local val=tonumber(args[1]) or 128; LP.CameraMaxZoomDistance=val; notify("Zoom","Max zoom set to "..val)
+end)
+reg("spin",{"sp"},"Toggle spinning your character",function()
+    Siriguela_Spin=not Siriguela_Spin; syncCharToggle("spin",Siriguela_Spin); notify("Spin",Siriguela_Spin and "Enabled" or "Disabled")
+    if Siriguela_Spin then task.spawn(function()
+        local angle=0
+        while Siriguela_Spin do local root=getRoot(getChar())
+            if root then angle=angle+5; root.CFrame=CFrame.new(root.Position)*CFrame.Angles(0,math.rad(angle),0) end
+            task.wait(0.03) end end) end
+end)
+reg("freeze",{"fr","fz"},"Freeze your character in place",function()
+    Siriguela_Freeze=true; local root=getRoot(getChar())
+    if root then local bv=Instance.new("BodyPosition"); bv.Position=root.CFrame.Position
+        bv.MaxForce=Vector3.new(1e6,1e6,1e6); bv.D=1000; bv.P=10000; bv.Name="Siriguela_Freeze"; bv.Parent=root end
+    notify("Freeze","Character frozen")
+end)
+reg("unfreeze",{"unfr","ufz"},"Unfreeze your character",function()
+    Siriguela_Freeze=false; local root=getRoot(getChar())
+    if root then local bv=root:FindFirstChild("Siriguela_Freeze"); if bv then bv:Destroy() end end
+    notify("Unfreeze","Character unfrozen")
+end)
+reg("fullbright",{"fb"},"Toggle fullbright (max ambient lighting)",function()
+    Siriguela_FullBright=not Siriguela_FullBright; syncCharToggle("fullbright",Siriguela_FullBright)
+    if Siriguela_FullBright then
+        Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.FogEnd=100000
+        Lighting.GlobalShadows=false; Lighting.Ambient=Color3.fromRGB(178,178,178)
+        Lighting.OutdoorAmbient=Color3.fromRGB(178,178,178)
+    else Lighting.Brightness=1; Lighting.GlobalShadows=true
+        Lighting.Ambient=Color3.fromRGB(70,70,70); Lighting.OutdoorAmbient=Color3.fromRGB(127,127,127) end
+    notify("Fullbright",Siriguela_FullBright and "Enabled" or "Disabled")
+end)
+reg("size",{"sz","scale"},"Set character scale. Usage: size [value e.g. 1.5]",function(args)
+    local val=math.clamp(tonumber(args[1]) or 1,0.1,10)
+    local hum=getHuman(getChar())
+    if hum then hum.BodyDepthScale.Value=val; hum.BodyHeightScale.Value=val
+        hum.BodyWidthScale.Value=val; hum.HeadScale.Value=val; notify("Size","Scale set to "..val) end
+end)
+reg("chat",{"say","c"},"Send a chat message. Usage: chat [message]",function(args)
+    if #args==0 then notify("Chat","No message given"); return end
+    local msg=table.concat(args," ")
+    pcall(function()
+        game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
+            :FindFirstChild("SayMessageRequest"):FireServer(msg,"All") end)
+    notify("Chat","Sent: "..msg)
+end)
+reg("view",{"spectate","watch"},"Spectate a player. Usage: view [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("View","Player not found"); return end
+    local h=getHuman(getChar(target)); if h then Camera.CameraSubject=h; notify("View","Spectating "..target.Name) end
+end)
+reg("unview",{"unspectate","uv"},"Stop spectating and return camera to self",function()
+    local myH=getHuman(getChar()); if myH then Camera.CameraSubject=myH; notify("Unview","Camera restored") end
+end)
+reg("glow",{"gl"},"Toggle a glowing light on your character. Usage: glow [r g b]",function(args)
+    local root=getRoot(getChar()); if not root then return end
+    local existing=root:FindFirstChild("Siriguela_Glow")
+    if existing then existing:Destroy(); notify("Glow","Glow removed")
+    else local r=tonumber(args[1]) or 0; local g=tonumber(args[2]) or 220; local b=tonumber(args[3]) or 255
+        local light=Instance.new("PointLight"); light.Name="Siriguela_Glow"; light.Brightness=5; light.Range=20
+        light.Color=Color3.fromRGB(r,g,b); light.Parent=root; notify("Glow","Glow added ("..r..","..g..","..b..")") end
+end)
+reg("vanish",{"vn"},"Toggle character transparency locally",function()
+    local char=getChar(); if not char then return end
+    local isVanished=char:FindFirstChild("Siriguela_Vanished")
+    if isVanished then isVanished:Destroy()
+        for _,v in ipairs(char:GetDescendants()) do
+            if v:IsA("BasePart") and v.Name~="HumanoidRootPart" then v.LocalTransparencyModifier=0 end end
+        notify("Vanish","Visible again")
+    else local tag=Instance.new("BoolValue"); tag.Name="Siriguela_Vanished"; tag.Parent=char
+        for _,v in ipairs(char:GetDescendants()) do
+            if v:IsA("BasePart") and v.Name~="HumanoidRootPart" then v.LocalTransparencyModifier=1 end end
+        notify("Vanish","You are now invisible locally") end
+end)
+reg("tprandom",{"tpr"},"Teleport to a random player",function()
+    local others={}
+    for _,p in ipairs(Players:GetPlayers()) do if p~=LP and getRoot(getChar(p)) then table.insert(others,p) end end
+    if #others==0 then notify("TP Random","No valid players found"); return end
+    local target=others[math.random(1,#others)]
+    local root=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+    if root and tRoot then root.CFrame=tRoot.CFrame+Vector3.new(3,0,0); notify("TP Random","Teleported to "..target.Name) end
+end)
+reg("listplayers",{"lp","plist"},"Print all players and their UserIds to output",function()
+    for _,p in ipairs(Players:GetPlayers()) do
+        print(string.format("[Siriguela] %s | ID: %d",p.Name,p.UserId)) end
+    notify("Players",#Players:GetPlayers().." player(s) listed in output")
+end)
+reg("fakename",{"fn","nick"},"Set a local display name label. Usage: fakename [name]",function(args)
+    local newName=args[1] or LP.Name; local char=getChar(); if not char then return end
+    for _,v in ipairs(char:GetDescendants()) do if v.Name=="Siriguela_FakeName" then v:Destroy() end end
+    local head=char:FindFirstChild("Head"); if not head then notify("Fakename","No head found"); return end
+    local bb=Instance.new("BillboardGui"); bb.Name="Siriguela_FakeName"; bb.Size=UDim2.new(0,120,0,30)
+    bb.StudsOffset=Vector3.new(0,2,0); bb.AlwaysOnTop=false; bb.Adornee=head; bb.Parent=char
+    local lbl=Instance.new("TextLabel"); lbl.BackgroundTransparency=1; lbl.Size=UDim2.new(1,0,1,0)
+    lbl.Font=Enum.Font.GothamBold; lbl.Text=newName; lbl.TextColor3=C.Accent; lbl.TextSize=14
+    lbl.TextStrokeTransparency=0.4; lbl.Parent=bb; notify("Fakename","Name set to: "..newName)
+end)
+reg("goto",{"gotopos","pos"},"Teleport to coordinates. Usage: goto [x] [y] [z]",function(args)
+    local x=tonumber(args[1]) or 0; local y=tonumber(args[2]) or 5; local z=tonumber(args[3]) or 0
+    local root=getRoot(getChar())
+    if root then root.CFrame=CFrame.new(x,y,z); notify("Goto",string.format("Moved to (%.1f, %.1f, %.1f)",x,y,z)) end
+end)
+reg("origin",{"o","zero"},"Teleport to workspace origin (0,0,0)",function()
+    local root=getRoot(getChar()); if root then root.CFrame=CFrame.new(0,5,0); notify("Origin","Teleported to (0, 5, 0)") end
+end)
+reg("refresh",{"rf"},"Re-apply your current speed and jump values",function()
+    local h=getHuman(getChar())
+    if h then h.WalkSpeed=Siriguela_SpeedVal; h.JumpPower=Siriguela_JumpVal; h.UseJumpPower=true
+        notify("Refresh","Speed="..Siriguela_SpeedVal.."  Jump="..Siriguela_JumpVal) end
+end)
+reg("reset",{"rst"},"Reset walkspeed and jump to Roblox defaults",function()
+    Siriguela_SpeedVal=16; Siriguela_JumpVal=50; local h=getHuman(getChar())
+    if h then h.WalkSpeed=16; h.JumpPower=50; h.UseJumpPower=true end; notify("Reset","Speed=16  Jump=50")
+end)
+reg("ff",{"forcefield"},"Give yourself a ForceField (blocks damage)",function()
+    local char=getChar(); if not char then return end
+    if char:FindFirstChildOfClass("ForceField") then notify("FF","ForceField already active"); return end
+    local ff=Instance.new("ForceField"); ff.Visible=false; ff.Parent=char; notify("FF","ForceField applied")
+end)
+reg("unff",{"removeff","rff"},"Remove your ForceField",function()
+    local char=getChar(); if not char then return end
+    local ff=char:FindFirstChildOfClass("ForceField")
+    if ff then ff:Destroy(); notify("UnFF","ForceField removed") else notify("UnFF","No ForceField found") end
+end)
+reg("spawn",{"tpspawn","sp2"},"Teleport to a SpawnLocation in the map",function()
+    local spawnLoc=workspace:FindFirstChildOfClass("SpawnLocation")
+    if spawnLoc then local root=getRoot(getChar())
+        if root then root.CFrame=spawnLoc.CFrame+Vector3.new(0,5,0); notify("Spawn","Teleported to spawn") end
+    else notify("Spawn","No SpawnLocation found in workspace") end
+end)
+reg("kickme",{"km"},"Leave the game immediately",function()
+    notify("Kick","Leaving game..."); task.wait(1); game:Shutdown()
+end)
+reg("printpos",{"pp","whereami"},"Print your current position to output",function()
+    local root=getRoot(getChar()); if root then
+        local p=root.Position; local msg=string.format("X=%.2f  Y=%.2f  Z=%.2f",p.X,p.Y,p.Z)
+        print("[Siriguela] Position: "..msg); notify("Position",msg) end
+end)
+reg("copypos",{"cp"},"Copy your current position to clipboard",function()
+    local root=getRoot(getChar()); if root then
+        local p=root.Position; local txt=string.format("Vector3.new(%.2f, %.2f, %.2f)",p.X,p.Y,p.Z)
+        if setclipboard then setclipboard(txt) end; notify("CopyPos",txt) end
+end)
+reg("headless",{"hl2","nohead"},"Toggle headless look (hide Head mesh locally)",function()
+    local char=getChar(); if not char then return end
+    local head=char:FindFirstChild("Head"); if not head then return end
+    local mesh=head:FindFirstChildOfClass("SpecialMesh")
+    if mesh then if mesh.Scale==Vector3.new(0,0,0) then mesh.Scale=Vector3.new(1,1,1); notify("Headless","Head restored")
+        else mesh.Scale=Vector3.new(0,0,0); notify("Headless","Head hidden") end
+    else local m=Instance.new("SpecialMesh"); m.Scale=Vector3.new(0,0,0); m.Parent=head; notify("Headless","Head hidden") end
+end)
+reg("annoy",{"spam"},"Spam a message in chat X times. Usage: annoy [times] [message]",function(args)
+    local count=math.clamp(tonumber(args[1]) or 5,1,20)
+    local msg=""; for i=2,#args do msg=msg..args[i].." " end; msg=msg:match("^%s*(.-)%s*$")
+    if msg=="" then notify("Annoy","No message given"); return end
+    task.spawn(function()
+        for i=1,count do
+            pcall(function()
+                game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
+                    :FindFirstChild("SayMessageRequest"):FireServer(msg,"All") end)
+            task.wait(0.6) end end)
+    notify("Annoy","Spamming: "..msg.." ×"..count)
+end)
+reg("rainbowname",{"rbn"},"Toggle rainbow color cycling on your name label",function()
+    local char=getChar(); if not char then return end
+    local existing=char:FindFirstChild("Siriguela_RainbowName")
+    if existing then existing:Destroy(); notify("Rainbow Name","Disabled"); return end
+    local tag=Instance.new("BoolValue"); tag.Name="Siriguela_RainbowName"; tag.Parent=char
+    local head=char:FindFirstChild("Head"); if not head then return end
+    local bb=Instance.new("BillboardGui"); bb.Name="Siriguela_RainbowBB"; bb.Size=UDim2.new(0,120,0,30)
+    bb.StudsOffset=Vector3.new(0,2,0); bb.AlwaysOnTop=false; bb.Adornee=head; bb.Parent=char
+    local lbl=Instance.new("TextLabel"); lbl.BackgroundTransparency=1; lbl.Size=UDim2.new(1,0,1,0)
+    lbl.Font=Enum.Font.GothamBold; lbl.Text=LP.Name; lbl.TextSize=14; lbl.TextStrokeTransparency=0.4; lbl.Parent=bb
+    local hue=0; task.spawn(function()
+        while char:FindFirstChild("Siriguela_RainbowName") do
+            hue=(hue+1)%360; lbl.TextColor3=Color3.fromHSV(hue/360,1,1); task.wait(0.05) end; bb:Destroy() end)
+    notify("Rainbow Name","Enabled")
+end)
+reg("boost",{"speedboost","sb"},"Instantly set speed to 100 for 5s then restore",function()
+    local h=getHuman(getChar()); if not h then return end
+    local prev=Siriguela_SpeedVal; h.WalkSpeed=100; notify("Boost","Speed 100 for 5 seconds!")
+    task.delay(5,function() local h2=getHuman(getChar()); if h2 then h2.WalkSpeed=prev end; notify("Boost","Speed restored to "..prev) end)
+end)
+reg("hidegui",{"hg","hide"},"Hide the Siriguela Admin window",function()
+    MainFrame.Visible=false; Siriguela_Visible=false; notify("GUI","Hidden — press RightCtrl to restore")
+end)
+reg("showgui",{"sg","show"},"Show the Siriguela Admin window",function() MainFrame.Visible=true; Siriguela_Visible=true end)
+reg("lockcam",{"lc"},"Lock camera to your current position",function()
+    Camera.CameraType=Enum.CameraType.Scriptable; notify("Lock Cam","Camera locked — use unlockcam to restore")
+end)
+reg("unlockcam",{"ulc"},"Restore camera to default (Follow)",function()
+    Camera.CameraType=Enum.CameraType.Custom; notify("Unlock Cam","Camera restored")
+end)
+reg("zoomin",{"zi"},"Zoom camera in (reduce FieldOfView by 10)",function()
+    Camera.FieldOfView=math.clamp(Camera.FieldOfView-10,10,120); notify("Zoom In","FOV: "..Camera.FieldOfView)
+end)
+reg("zoomout",{"zo"},"Zoom camera out (increase FieldOfView by 10)",function()
+    Camera.FieldOfView=math.clamp(Camera.FieldOfView+10,10,120); notify("Zoom Out","FOV: "..Camera.FieldOfView)
+end)
+reg("ambient",{"amb"},"Set ambient light color. Usage: ambient [r g b]",function(args)
+    local r=tonumber(args[1]) or 128; local g=tonumber(args[2]) or 128; local b=tonumber(args[3]) or 128
+    Lighting.Ambient=Color3.fromRGB(r,g,b); Lighting.OutdoorAmbient=Color3.fromRGB(r,g,b)
+    notify("Ambient",r..", "..g..", "..b)
+end)
+reg("rainbowsky",{"rsky","rs2"},"Toggle rainbow ambient color cycling",function()
+    if _G.Siriguela_RainbowSky then _G.Siriguela_RainbowSky=false; notify("Rainbow Sky","Disabled"); return end
+    _G.Siriguela_RainbowSky=true; notify("Rainbow Sky","Enabled")
+    task.spawn(function()
+        local hue=0
+        while _G.Siriguela_RainbowSky do hue=(hue+1)%360; local col=Color3.fromHSV(hue/360,0.6,1)
+            Lighting.Ambient=col; Lighting.OutdoorAmbient=col; task.wait(0.05) end end)
+end)
+reg("deletepart",{"dp","del"},"Delete the next part you click on",function()
+    notify("Delete Part","Click a part to delete it")
+    local conn; conn=Mouse.Button1Down:Connect(function()
+        conn:Disconnect(); local target=Mouse.Target
+        if target and not target:IsDescendantOf(LP.Character or Instance.new("Folder")) then
+            local name=target.Name; target:Destroy(); notify("Delete Part","Deleted: "..name)
+        else notify("Delete Part","Invalid target") end end)
+end)
+reg("tools",{"backpack","bp"},"List all tools in your backpack to output",function()
+    local bp=LP:FindFirstChild("Backpack"); if not bp then notify("Tools","No backpack found"); return end
+    local items={}; for _,v in ipairs(bp:GetChildren()) do table.insert(items,v.Name) end
+    if #items==0 then notify("Tools","Backpack is empty")
+    else print("[Siriguela] Backpack: "..table.concat(items,", ")); notify("Tools",#items.." item(s) — see output") end
+end)
+reg("equip",{"eq"},"Equip a tool from backpack. Usage: equip [toolname]",function(args)
+    local name=table.concat(args," "):lower(); if name=="" then notify("Equip","Provide a tool name"); return end
+    local bp=LP:FindFirstChild("Backpack"); if not bp then notify("Equip","No backpack"); return end
+    for _,v in ipairs(bp:GetChildren()) do
+        if v.Name:lower():sub(1,#name)==name then local char=getChar()
+            if char then v.Parent=char; notify("Equip","Equipped: "..v.Name); return end end end
+    notify("Equip","Tool not found: "..name)
+end)
+reg("unequip",{"ueq","uneq"},"Unequip all held tools back to backpack",function()
+    local char=getChar(); local bp=LP:FindFirstChild("Backpack"); if not char or not bp then return end
+    for _,v in ipairs(char:GetChildren()) do if v:IsA("Tool") then v.Parent=bp end end
+    notify("Unequip","All tools unequipped")
+end)
+reg("droptools",{"dt"},"Destroy all tools in backpack and character",function()
+    local char=getChar(); local bp=LP:FindFirstChild("Backpack"); local count=0
+    if char then for _,v in ipairs(char:GetChildren()) do if v:IsA("Tool") then v:Destroy(); count=count+1 end end end
+    if bp then for _,v in ipairs(bp:GetChildren()) do if v:IsA("Tool") then v:Destroy(); count=count+1 end end end
+    notify("Drop Tools","Removed "..count.." tool(s)")
+end)
+reg("nuke",{"explode","boom"},"Create a large explosion at your position",function()
+    local root=getRoot(getChar()); if not root then return end
+    local exp=Instance.new("Explosion"); exp.Position=root.Position
+    exp.BlastRadius=50; exp.BlastPressure=5e5; exp.DestroyJointRadiusPercent=0; exp.Parent=workspace
+    notify("Nuke","BOOM!")
+end)
+reg("killnpcs",{"knpc","clearnpcs"},"Kill all NPC Humanoids in workspace",function()
+    local count=0; local playerChars={}
+    for _,p in ipairs(Players:GetPlayers()) do if p.Character then playerChars[p.Character]=true end end
+    for _,obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("Humanoid") and not playerChars[obj.Parent] then obj.Health=0; count=count+1 end end
+    notify("Kill NPCs","Killed "..count.." NPC(s)")
+end)
+reg("dance",{"dj","groove"},"Force a looping jump animation",function()
+    if _G.Siriguela_Dancing then _G.Siriguela_Dancing=false; notify("Dance","Stopped"); return end
+    _G.Siriguela_Dancing=true; notify("Dance","Grooving!")
+    task.spawn(function()
+        while _G.Siriguela_Dancing do
+            local h2=getHuman(getChar()); if h2 then h2:ChangeState(Enum.HumanoidStateType.Jumping) end
+            task.wait(0.4) end end)
+end)
+reg("ping",{"latency","ms"},"Print your approximate network ping",function()
+    local ms=0; pcall(function() ms=math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue()) end)
+    notify("Ping",ms.." ms"); print("[Siriguela] Ping: "..ms.." ms")
+end)
+reg("playsound",{"ps","music"},"Play a sound by asset ID. Usage: playsound [assetId]",function(args)
+    local id=tonumber(args[1]); if not id then notify("Sound","Provide a sound ID"); return end
+    pcall(function()
+        local s=SoundService:FindFirstChild("Siriguela_Sound"); if s then s:Destroy() end
+        local snd=Instance.new("Sound"); snd.Name="Siriguela_Sound"; snd.SoundId="rbxassetid://"..id
+        snd.Volume=1; snd.Parent=SoundService; snd:Play(); notify("Sound","Playing ID: "..id) end)
+end)
+reg("stopsound",{"ss","stopmusic"},"Stop any Siriguela-playing sound",function()
+    local s=SoundService:FindFirstChild("Siriguela_Sound")
+    if s then s:Stop(); s:Destroy(); notify("Sound","Stopped") else notify("Sound","No Siriguela sound playing") end
+end)
+reg("ragdoll",{"rag","floppy"},"Toggle ragdoll (disconnect limb joints)",function()
+    local char=getChar(); if not char then return end
+    local tag=char:FindFirstChild("Siriguela_Ragdoll")
+    if tag then tag:Destroy(); LP:LoadCharacter(); notify("Ragdoll","Restored — respawning"); return end
+    local bv=Instance.new("BoolValue"); bv.Name="Siriguela_Ragdoll"; bv.Parent=char
+    local h=getHuman(char); if h then h:ChangeState(Enum.HumanoidStateType.Physics) end
+    for _,v in ipairs(char:GetDescendants()) do if v:IsA("Motor6D") then v.Enabled=false end end
+    notify("Ragdoll","Enabled — use ragdoll again to restore")
+end)
+reg("gameinfo",{"gi","info"},"Print current game/place info to output",function()
+    local ok,name=pcall(function() return MarketplaceService:GetProductInfo(game.PlaceId).Name end)
+    local gameName=ok and name or "Unknown"
+    local msg=string.format("Game: %s | PlaceID: %d | JobID: %s",gameName,game.PlaceId,game.JobId:sub(1,18))
+    print("[Siriguela] "..msg); notify("Game Info",gameName.." | "..game.PlaceId)
+end)
+reg("tpin",{"tpinside"},"Teleport directly on top of a player. Usage: tpin [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("TPin","Player not found"); return end
+    local root=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+    if root and tRoot then root.CFrame=tRoot.CFrame; notify("TPin","Teleported inside "..target.Name) end
+end)
+reg("follow",{"fo","stalk"},"Toggle following a player. Usage: follow [player]",function(args)
+    if _G.Siriguela_FollowConn then _G.Siriguela_FollowConn:Disconnect(); _G.Siriguela_FollowConn=nil; notify("Follow","Stopped following"); return end
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Follow","Player not found"); return end
+    notify("Follow","Following "..target.Name)
+    _G.Siriguela_FollowConn=RunService.Heartbeat:Connect(function()
+        local myRoot=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+        if myRoot and tRoot then myRoot.CFrame=tRoot.CFrame+Vector3.new(3,0,0) end end)
+end)
+reg("unfollow",{"ufo","stopfollow"},"Stop following any player",function()
+    if _G.Siriguela_FollowConn then _G.Siriguela_FollowConn:Disconnect(); _G.Siriguela_FollowConn=nil; notify("Unfollow","Stopped")
+    else notify("Unfollow","Not currently following anyone") end
+end)
+reg("loopbring",{"lb"},"Continuously bring a player to you. Usage: loopbring [player]",function(args)
+    if _G.Siriguela_LoopBringConn then _G.Siriguela_LoopBringConn:Disconnect(); _G.Siriguela_LoopBringConn=nil; notify("Loop Bring","Stopped"); return end
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Loop Bring","Player not found"); return end
+    notify("Loop Bring","Bringing "..target.Name)
+    _G.Siriguela_LoopBringConn=RunService.Heartbeat:Connect(function()
+        local myRoot=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+        if myRoot and tRoot then tRoot.CFrame=myRoot.CFrame+Vector3.new(4,0,0) end end)
+end)
+reg("sky",{"gotosky"},"Fly straight up to y=5000",function()
+    local root=getRoot(getChar())
+    if root then root.CFrame=CFrame.new(root.Position.X,5000,root.Position.Z); notify("Sky","Launched to the sky!") end
+end)
+reg("ground",{"floor","gnd"},"Teleport to y=0 at your current X,Z",function()
+    local root=getRoot(getChar())
+    if root then root.CFrame=CFrame.new(root.Position.X,0,root.Position.Z); notify("Ground","Moved to ground level") end
+end)
+reg("hitbox",{"hb"},"Expand your HumanoidRootPart hitbox. Usage: hitbox [size]",function(args)
+    local size=tonumber(args[1]) or 10; local root=getRoot(getChar())
+    if root then root.Size=Vector3.new(size,size,size); notify("Hitbox","HRP size set to "..size) end
+end)
+reg("unhitbox",{"uhb"},"Reset HumanoidRootPart to default size",function()
+    local root=getRoot(getChar()); if root then root.Size=Vector3.new(2,2,1); notify("Unhitbox","HRP reset to default") end
+end)
+reg("broadcast",{"bc","announce"},"Broadcast a message as a notification. Usage: broadcast [msg]",function(args)
+    if #args==0 then notify("Broadcast","No message given"); return end
+    local msg=table.concat(args," "); notify("[BROADCAST]",msg,8); print("[Siriguela BROADCAST] "..msg)
+end)
+reg("serverhop",{"sh","hop"},"Join a different server of this game",function()
+    notify("Server Hop","Finding new server...")
+    task.spawn(function() pcall(function() TeleportService:Teleport(game.PlaceId,LP) end) end)
+end)
+reg("clearesp",{"ce"},"Remove all ESP highlights",function()
+    removeESP(); Siriguela_ESPEnabled=false; syncCharToggle("esp",false); notify("Clear ESP","All ESP removed")
+end)
+reg("chatlogs",{"cl","chatlog"},"Toggle printing all chat to F9 output",function()
+    _G.Siriguela_ChatLogs=not _G.Siriguela_ChatLogs; notify("Chat Logs",_G.Siriguela_ChatLogs and "Printing chats to output" or "Disabled")
+end)
+reg("nightvision",{"nv2","nvg"},"Toggle night vision (bright PointLight on camera)",function()
+    local existing=Camera:FindFirstChild("Siriguela_NVG")
+    if existing then existing:Destroy(); notify("Night Vision","OFF"); return end
+    local light=Instance.new("PointLight"); light.Name="Siriguela_NVG"; light.Brightness=10; light.Range=80
+    light.Color=Color3.fromRGB(220,255,220); light.Parent=Camera; notify("Night Vision","ON")
+end)
+reg("moonwalk",{"mw"},"Toggle moonwalk (reverse walk direction)",function()
+    _G.Siriguela_Moonwalk=not _G.Siriguela_Moonwalk
+    if _G.Siriguela_Moonwalk then LP.CameraMode=Enum.CameraMode.LockFirstPerson
+    else LP.CameraMode=Enum.CameraMode.Classic end
+    notify("Moonwalk",_G.Siriguela_Moonwalk and "ON" or "OFF")
+end)
+reg("mapinfo",{"mi","map"},"Print workspace object count and gravity",function()
+    local count=#workspace:GetDescendants()
+    local msg=string.format("Objects: %d | Gravity: %.1f | PlaceID: %d",count,workspace.Gravity,game.PlaceId)
+    print("[Siriguela] "..msg); notify("Map Info",msg)
+end)
+reg("nodecals",{"nd"},"Remove all Decal and Texture instances from workspace",function()
+    local count=0
+    for _,v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("Decal") or v:IsA("Texture") then v:Destroy(); count=count+1 end end
+    notify("No Decals","Removed "..count.." decal(s)")
+end)
+reg("noparticles",{"np"},"Remove all ParticleEmitter instances from workspace",function()
+    local count=0
+    for _,v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
+            v:Destroy(); count=count+1 end end
+    notify("No Particles","Removed "..count.." emitter(s)")
+end)
+reg("camplr",{"cp2","campos"},"Attach camera to a player's character. Usage: camplr [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("CamPlr","Player not found"); return end
+    local tChar=getChar(target); local tRoot=getRoot(tChar)
+    if tRoot then Camera.CameraType=Enum.CameraType.Scriptable
+        local conn; conn=RunService.RenderStepped:Connect(function()
+            if not tRoot or not tRoot.Parent then conn:Disconnect(); return end
+            Camera.CFrame=tRoot.CFrame*CFrame.new(0,5,10) end)
+        _G.Siriguela_CamConn=conn; notify("CamPlr","Camera attached to "..target.Name) end
+end)
+reg("uncamplr",{"ucp2"},"Detach camera from player and restore",function()
+    if _G.Siriguela_CamConn then _G.Siriguela_CamConn:Disconnect(); _G.Siriguela_CamConn=nil end
+    Camera.CameraType=Enum.CameraType.Custom; notify("UnCamPlr","Camera restored")
+end)
+
+task.spawn(function()
+    game:GetService("TextChatService").MessageReceived:Connect(function(msg)
+        if _G.Siriguela_ChatLogs and msg.TextSource then
+            local plr=Players:GetPlayerByUserId(msg.TextSource.UserId)
+            if plr then print(string.format("[Siriguela CHAT] %s: %s",plr.Name,msg.Text)) end end end) end)
+
+reg("orbit",{"orb"},"Circle around a player. Usage: orbit [player] [optional radius]",function(args)
+    if _G.Siriguela_OrbitConn then _G.Siriguela_OrbitConn:Disconnect(); _G.Siriguela_OrbitConn=nil; notify("Orbit","Stopped orbiting"); return end
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Orbit","Player not found"); return end
+    local radius=tonumber(args[2]) or 10; local angle=0
+    notify("Orbit","Orbiting "..target.Name.." (radius "..radius..")")
+    _G.Siriguela_OrbitConn=RunService.Heartbeat:Connect(function(dt)
+        angle=angle+dt*2; local tRoot=getRoot(getChar(target)); local myRoot=getRoot(getChar())
+        if not tRoot or not myRoot then return end
+        local ox=tRoot.Position.X+math.cos(angle)*radius; local oz=tRoot.Position.Z+math.sin(angle)*radius
+        myRoot.CFrame=CFrame.new(ox,tRoot.Position.Y,oz) end)
+end)
+reg("unorbit",{"uorb"},"Stop orbiting a player",function()
+    if _G.Siriguela_OrbitConn then _G.Siriguela_OrbitConn:Disconnect(); _G.Siriguela_OrbitConn=nil; notify("Orbit","Stopped")
+    else notify("Orbit","Not currently orbiting") end
+end)
+reg("fling",{"yeet"},"Launch yourself into the air with random force",function()
+    local root=getRoot(getChar()); if not root then return end
+    local bv=Instance.new("BodyVelocity")
+    bv.Velocity=Vector3.new(math.random(-200,200),math.random(300,600),math.random(-200,200))
+    bv.MaxForce=Vector3.new(1e9,1e9,1e9); bv.Parent=root
+    task.delay(0.2,function() pcall(function() bv:Destroy() end) end); notify("Fling","YEET!")
+end)
+reg("color",{"bodycolor","bc2"},"Set all body part colors. Usage: color [r g b]",function(args)
+    local r=math.clamp(tonumber(args[1]) or 128,0,255); local g=math.clamp(tonumber(args[2]) or 128,0,255)
+    local b=math.clamp(tonumber(args[3]) or 128,0,255); local col=Color3.fromRGB(r,g,b); local char=getChar()
+    if not char then return end
+    for _,v in ipairs(char:GetChildren()) do if v:IsA("BasePart") and v.Name~="HumanoidRootPart" then v.Color=col end end
+    notify("Color",string.format("RGB(%d, %d, %d)",r,g,b))
+end)
+reg("resetcolor",{"rc2","defaultcolor"},"Reset all body parts to default color",function()
+    pcall(function() LP:ApplyCharacterAppearance(Players:GetCharacterAppearanceAsync(LP.UserId)) end)
+    notify("Color","Appearance reset")
+end)
+reg("superjump",{"sj","highjump"},"Do a single massive jump. Usage: superjump [power]",function(args)
+    local power=tonumber(args[1]) or 300; local root=getRoot(getChar())
+    if root then local bv=Instance.new("BodyVelocity"); bv.Velocity=Vector3.new(0,power,0)
+        bv.MaxForce=Vector3.new(0,1e9,0); bv.Parent=root
+        task.delay(0.1,function() pcall(function() bv:Destroy() end) end)
+        notify("Super Jump","Power: "..power) end
+end)
+reg("randomtp",{"rtp","randpos"},"Teleport to a random X,Z position in the map",function()
+    local root=getRoot(getChar()); if not root then return end
+    local x=math.random(-500,500); local z=math.random(-500,500)
+    root.CFrame=CFrame.new(x,50,z); notify("Random TP",string.format("Teleported to (%.0f, 50, %.0f)",x,z))
+end)
+reg("sprint",{"run","sr"},"Toggle sprint (set walkspeed to 50)",function()
+    local h=getHuman(getChar()); if not h then return end
+    if h.WalkSpeed==50 then h.WalkSpeed=Siriguela_SpeedVal; notify("Sprint","OFF — speed: "..Siriguela_SpeedVal)
+    else h.WalkSpeed=50; notify("Sprint","ON — speed: 50") end
+end)
+reg("sneak",{"creep","sn"},"Toggle sneak (set walkspeed to 4)",function()
+    local h=getHuman(getChar()); if not h then return end
+    if h.WalkSpeed==4 then h.WalkSpeed=Siriguela_SpeedVal; notify("Sneak","OFF — speed: "..Siriguela_SpeedVal)
+    else h.WalkSpeed=4; notify("Sneak","ON — speed: 4") end
+end)
+reg("tiny",{"smol"},"Set character scale to 0.3 (tiny)",function() execCmd("size 0.3"); notify("Tiny","You are now tiny!") end)
+reg("giant",{"big","huge"},"Set character scale to 5 (giant)",function() execCmd("size 5"); notify("Giant","You are now huge!") end)
+reg("loopkill",{"lk","loopdie"},"Toggle loop killing yourself (respawn farming)",function()
+    _G.Siriguela_LoopKill=not _G.Siriguela_LoopKill; notify("Loop Kill",_G.Siriguela_LoopKill and "ON" or "OFF")
+    if _G.Siriguela_LoopKill then task.spawn(function()
+        while _G.Siriguela_LoopKill do local h=getHuman(getChar()); if h then h.Health=0 end; task.wait(3) end end) end
+end)
+reg("fakelag",{"fl2","stutter"},"Toggle fake lag stuttering effect",function()
+    _G.Siriguela_FakeLag=not _G.Siriguela_FakeLag; notify("Fake Lag",_G.Siriguela_FakeLag and "ON" or "OFF")
+    if _G.Siriguela_FakeLag then task.spawn(function()
+        while _G.Siriguela_FakeLag do local root=getRoot(getChar())
+            if root then local cf=root.CFrame; task.wait(0.05); if root and root.Parent then root.CFrame=cf end end
+            task.wait(0.2) end end) end
+end)
+reg("blink",{"bl","blinktp"},"Blink forward in your look direction. Usage: blink [studs]",function(args)
+    local dist=tonumber(args[1]) or 20; local root=getRoot(getChar())
+    if root then root.CFrame=root.CFrame+root.CFrame.LookVector*dist; notify("Blink","Blinked "..dist.." studs forward") end
+end)
+reg("wallhug",{"wh"},"Push character into wall/surface in look direction",function()
+    local root=getRoot(getChar()); if not root then return end
+    local ray=workspace:Raycast(root.Position,root.CFrame.LookVector*50)
+    if ray then root.CFrame=CFrame.new(ray.Position-root.CFrame.LookVector*2); notify("Wall Hug","Pushed to surface")
+    else notify("Wall Hug","No surface found within 50 studs") end
+end)
+reg("listscripts",{"ls","scripts"},"List all Scripts/LocalScripts in workspace to output",function()
+    local count=0
+    for _,v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("Script") or v:IsA("LocalScript") or v:IsA("ModuleScript") then
+            print(string.format("[Siriguela] %s — %s",v.ClassName,v:GetFullName())); count=count+1 end end
+    notify("Scripts",count.." script(s) — see output")
+end)
+reg("laydown",{"ld","prone"},"Lay your character flat (prone pose via CFrame)",function()
+    local root=getRoot(getChar()); if not root then return end
+    root.CFrame=CFrame.new(root.Position)*CFrame.Angles(math.rad(90),0,0); notify("Lay Down","Chilling on the floor")
+end)
+reg("lookat",{"la","face"},"Rotate to face a player. Usage: lookat [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Look At","Player not found"); return end
+    local myRoot=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+    if myRoot and tRoot then myRoot.CFrame=CFrame.lookAt(myRoot.Position,tRoot.Position); notify("Look At","Facing "..target.Name) end
+end)
+reg("fakeadmin",{"fa"},"Print a fake [ADMIN] system-style message. Usage: fakeadmin [msg]",function(args)
+    if #args==0 then notify("Fake Admin","Provide a message"); return end
+    local msg=table.concat(args," "); print("[SYSTEM - ADMIN]: "..msg); notify("[ADMIN]",msg,6)
+end)
+reg("copyspeed",{"cws"},"Match your walkspeed to a player's. Usage: copyspeed [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Copy Speed","Player not found"); return end
+    local th=getHuman(getChar(target)); local mh=getHuman(getChar())
+    if th and mh then mh.WalkSpeed=th.WalkSpeed; Siriguela_SpeedVal=th.WalkSpeed; notify("Copy Speed",target.Name.." → "..th.WalkSpeed) end
+end)
+reg("scare",{"sc"},"Rapidly approach and back away from a player. Usage: scare [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Scare","Player not found"); return end
+    local myRoot=getRoot(getChar()); if not myRoot then return end
+    local origCF=myRoot.CFrame
+    task.spawn(function()
+        for _=1,5 do local tr=getRoot(getChar(target)); local mr=getRoot(getChar())
+            if tr and mr then mr.CFrame=tr.CFrame+Vector3.new(0,0,2) end; task.wait(0.12)
+            mr=getRoot(getChar()); if mr then mr.CFrame=origCF end; task.wait(0.12) end end)
+    notify("Scare","BOO'd "..target.Name)
+end)
+reg("party",{"rave","disco"},"Toggle party mode (rapid body color changes)",function()
+    _G.Siriguela_Party=not _G.Siriguela_Party; notify("Party",_G.Siriguela_Party and "PARTY TIME!" or "Party stopped")
+    if _G.Siriguela_Party then task.spawn(function()
+        while _G.Siriguela_Party do local char=getChar()
+            if char then for _,v in ipairs(char:GetChildren()) do
+                if v:IsA("BasePart") and v.Name~="HumanoidRootPart" then v.Color=Color3.fromHSV(math.random(),1,1) end end end
+            task.wait(0.12) end end) end
+end)
+reg("mark",{"setmark","sm2"},"Save your position as a quick mark",function()
+    local root=getRoot(getChar()); if root then _G.Siriguela_Mark=root.CFrame
+        notify("Mark",string.format("Saved (%.1f, %.1f, %.1f)",root.Position.X,root.Position.Y,root.Position.Z)) end
+end)
+reg("remark",{"rm2","gomark"},"Teleport back to your saved mark position",function()
+    local root=getRoot(getChar())
+    if root and _G.Siriguela_Mark then root.CFrame=_G.Siriguela_Mark; notify("Remark","Teleported to mark")
+    else notify("Remark","No mark saved — use 'mark' first") end
+end)
+reg("zerograv",{"zg","nograv"},"Toggle zero gravity (workspace gravity = 0)",function()
+    if workspace.Gravity==0 then workspace.Gravity=196.2; notify("Gravity","Restored to 196.2")
+    else workspace.Gravity=0; notify("Zero Gravity","Gravity = 0 — float away!") end
+end)
+reg("lowgrav",{"lg2"},"Set gravity to 30 (moon-like)",function()
+    workspace.Gravity=30; notify("Low Gravity","Gravity = 30 (moon)")
+end)
+reg("clearworkspace",{"cw","clearws"},"Remove all non-essential parts from workspace",function()
+    local count=0
+    for _,v in ipairs(workspace:GetChildren()) do
+        if v:IsA("Tool") or v:IsA("Accessory") then v:Destroy(); count=count+1 end end
+    notify("Clear Workspace","Removed "..count.." loose item(s)")
+end)
+reg("teams",{"teamlist","tl"},"List all teams in the game to output",function()
+    local teamsService=game:GetService("Teams"); local teamList=teamsService:GetTeams()
+    if #teamList==0 then notify("Teams","No teams in this game"); return end
+    for _,t in ipairs(teamList) do print(string.format("[Siriguela] Team: %s | Players: %d",t.Name,#t:GetPlayers())) end
+    notify("Teams",#teamList.." team(s) — see output")
+end)
+reg("jointeam",{"jt","team"},"Join a team by name. Usage: jointeam [teamname]",function(args)
+    if #args==0 then notify("Join Team","Provide a team name"); return end
+    local name=table.concat(args," "):lower()
+    for _,t in ipairs(game:GetService("Teams"):GetTeams()) do
+        if t.Name:lower():find(name,1,true) then LP.Team=t; notify("Join Team","Joined: "..t.Name); return end end
+    notify("Join Team","Team not found: "..name)
+end)
+reg("noshadows",{"nsh"},"Toggle global shadows off/on",function()
+    Lighting.GlobalShadows=not Lighting.GlobalShadows; notify("Shadows",Lighting.GlobalShadows and "ON" or "OFF")
+end)
+reg("fogcolor",{"fc"},"Set fog color. Usage: fogcolor [r g b]",function(args)
+    local r=tonumber(args[1]) or 128; local g=tonumber(args[2]) or 128; local b=tonumber(args[3]) or 128
+    Lighting.FogColor=Color3.fromRGB(r,g,b); notify("Fog Color",string.format("RGB(%d,%d,%d)",r,g,b))
+end)
+reg("nofog",{"nf2","clearfog"},"Remove fog entirely",function()
+    Lighting.FogEnd=100000; Lighting.FogStart=99999; notify("No Fog","Fog removed")
+end)
+reg("rain",{"weather"},"Print current weather-related lighting info",function()
+    print(string.format("[Siriguela] FogEnd=%.0f | Brightness=%.2f | ClockTime=%.2f | Gravity=%.1f",
+        Lighting.FogEnd,Lighting.Brightness,Lighting.ClockTime,workspace.Gravity))
+    notify("Weather",string.format("Fog=%.0f Bright=%.2f",Lighting.FogEnd,Lighting.Brightness))
+end)
+reg("sethealth",{"sh2","sethp"},"Set your health. Usage: sethealth [value]",function(args)
+    local val=tonumber(args[1]); if not val then notify("Set Health","Provide a value"); return end
+    local h=getHuman(getChar()); if h then h.Health=math.clamp(val,0,h.MaxHealth); notify("Set Health","Health = "..val) end
+end)
+reg("setmaxhealth",{"smh","maxhp"},"Set your max health. Usage: setmaxhealth [value]",function(args)
+    local val=tonumber(args[1]); if not val or val<=0 then notify("Max Health","Provide a positive value"); return end
+    local h=getHuman(getChar()); if h then h.MaxHealth=val; h.Health=val; notify("Max Health","MaxHealth = "..val) end
+end)
+reg("remotes",{"rem","listremotes"},"List all RemoteEvents and RemoteFunctions to output",function()
+    local count=0
+    for _,v in ipairs(game:GetDescendants()) do
+        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") or v:IsA("BindableEvent") then
+            print(string.format("[Siriguela] %s — %s",v.ClassName,v:GetFullName())); count=count+1 end end
+    notify("Remotes",count.." remote(s) found — see output")
+end)
+reg("listvalues",{"lv2","values"},"List all ValueBase objects in workspace to output",function()
+    local count=0
+    for _,v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("ValueBase") then
+            print(string.format("[Siriguela] %s '%s' = %s",v.ClassName,v:GetFullName(),tostring(v.Value))); count=count+1 end end
+    notify("Values",count.." value(s) — see output")
+end)
+reg("antigravity",{"ag","flipgrav"},"Toggle antigravity (BodyVelocity upward push)",function()
+    local root=getRoot(getChar()); if not root then return end
+    local existing=root:FindFirstChild("Siriguela_AntiGrav")
+    if existing then existing:Destroy(); notify("Anti Gravity","OFF"); return end
+    local bv=Instance.new("BodyVelocity"); bv.Name="Siriguela_AntiGrav"
+    bv.Velocity=Vector3.new(0,workspace.Gravity*0.75,0); bv.MaxForce=Vector3.new(0,math.huge,0); bv.Parent=root
+    notify("Anti Gravity","ON — floating!")
+end)
+reg("copychar",{"cc","copyappearance"},"Copy the appearance of another player. Usage: copychar [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Copy Char","Player not found"); return end
+    pcall(function()
+        local newDesc=Players:GetCharacterAppearanceAsync(target.UserId)
+        LP:ApplyCharacterAppearance(newDesc); notify("Copy Char","Copied appearance from "..target.Name) end)
+end)
+reg("flashbang",{"flash","fb2"},"Briefly flash the screen white",function()
+    local flash=Instance.new("Frame"); flash.BackgroundColor3=Color3.fromRGB(255,255,255)
+    flash.BackgroundTransparency=0; flash.BorderSizePixel=0; flash.Size=UDim2.new(1,0,1,0)
+    flash.ZIndex=100; flash.Parent=ScreenGui
+    task.spawn(function() for i=0,20 do flash.BackgroundTransparency=i/20; task.wait(0.04) end; flash:Destroy() end)
+    notify("Flashbang","FLASH!")
+end)
+reg("speedx",{"sx","multiplespeed"},"Multiply current walkspeed. Usage: speedx [multiplier]",function(args)
+    local mult=tonumber(args[1]) or 2; local h=getHuman(getChar())
+    if h then local newSpeed=math.clamp(Siriguela_SpeedVal*mult,0,1000); h.WalkSpeed=newSpeed; Siriguela_SpeedVal=newSpeed
+        notify("Speed ×"..mult,"WalkSpeed = "..newSpeed) end
+end)
+reg("stun",{"st2"},"Freeze yourself for N seconds. Usage: stun [seconds]",function(args)
+    local dur=math.clamp(tonumber(args[1]) or 3,1,30); execCmd("freeze"); notify("Stun","Frozen for "..dur.."s")
+    task.delay(dur,function() execCmd("unfreeze"); notify("Stun","Unfrozen!") end)
+end)
+reg("collecttools",{"ct"},"Collect all Tool instances near you into your backpack",function()
+    local root=getRoot(getChar()); local bp=LP:FindFirstChild("Backpack"); if not root or not bp then return end
+    local count=0
+    for _,v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("Tool") and not v:IsDescendantOf(bp) then local handle=v:FindFirstChild("Handle")
+            if handle and (handle.Position-root.Position).Magnitude<50 then v.Parent=bp; count=count+1 end end end
+    notify("Collect Tools","Collected "..count.." tool(s)")
+end)
+reg("firstperson",{"fp","1p"},"Toggle first person camera",function()
+    if LP.CameraMaxZoomDistance>0.5 then LP.CameraMaxZoomDistance=0.5; LP.CameraMinZoomDistance=0.5; notify("First Person","ON")
+    else LP.CameraMaxZoomDistance=400; LP.CameraMinZoomDistance=0.5; notify("First Person","OFF") end
+end)
+reg("namecolor",{"nc2","tagcolor"},"Set your fakename/nametag color. Usage: namecolor [r g b]",function(args)
+    local r=tonumber(args[1]) or 0; local g=tonumber(args[2]) or 220; local b=tonumber(args[3]) or 255
+    local char=getChar(); if not char then return end
+    for _,v in ipairs(char:GetDescendants()) do
+        if v:IsA("TextLabel") and v.Parent and v.Parent:IsA("BillboardGui") then v.TextColor3=Color3.fromRGB(r,g,b) end end
+    notify("Name Color",string.format("RGB(%d,%d,%d)",r,g,b))
+end)
+reg("behind",{"sneakup","bh"},"Teleport behind a player. Usage: behind [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Behind","Player not found"); return end
+    local myRoot=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+    if myRoot and tRoot then myRoot.CFrame=tRoot.CFrame*CFrame.new(0,0,4); notify("Behind","Sneaked behind "..target.Name) end
+end)
+reg("leaderstats",{"stats","ls2"},"Print all leaderstat values for all players",function()
+    local count=0
+    for _,plr in ipairs(Players:GetPlayers()) do local ls=plr:FindFirstChild("leaderstats"); if ls then
+        local vals={}; for _,v in ipairs(ls:GetChildren()) do table.insert(vals,v.Name.."="..tostring(v.Value)) end
+        print(string.format("[Siriguela] %s: %s",plr.Name,table.concat(vals," | "))); count=count+1 end end
+    if count==0 then notify("Leaderstats","No leaderstats found")
+    else notify("Leaderstats","Printed "..count.." player(s) — see output") end
+end)
+reg("distanceto",{"dst","dist"},"Show your distance to a player. Usage: distanceto [player]",function(args)
+    local target=findPlayer(args[1] or "")
+    if not target or type(target)~="userdata" then notify("Distance","Player not found"); return end
+    local myRoot=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+    if not myRoot or not tRoot then return end
+    local d=math.floor((myRoot.Position-tRoot.Position).Magnitude)
+    notify("Distance","You → "..target.Name..": "..d.." studs")
+end)
+reg("fps",{"fpsui","framerate"},"Toggle FPS counter HUD on screen",function()
+    _G.Siriguela_FPSOn=not _G.Siriguela_FPSOn; notify("FPS Counter",_G.Siriguela_FPSOn and "ON" or "OFF")
+    if _G.Siriguela_FPSOn then
+        if not _G.Siriguela_FPSGui then
+            local sg=Instance.new("ScreenGui"); sg.Name="Siriguela_FPSGui"; sg.IgnoreGuiInset=true
+            sg.DisplayOrder=13; sg.ResetOnSpawn=false
+            sg.Parent=LP:FindFirstChildOfClass("PlayerGui")
+            local lbl=Instance.new("TextLabel"); lbl.BackgroundColor3=Color3.fromRGB(0,0,0)
+            lbl.BackgroundTransparency=0.5; lbl.BorderSizePixel=0
+            lbl.Position=UDim2.new(0,8,0,8); lbl.Size=UDim2.new(0,90,0,22)
+            lbl.Font=Enum.Font.Code; lbl.TextColor3=C.Accent; lbl.TextSize=13; lbl.Parent=sg
+            local _lc=Instance.new("UICorner"); _lc.CornerRadius=UDim.new(0,4); _lc.Parent=lbl
+            _G.Siriguela_FPSGui=sg; _G.Siriguela_FPSLabel=lbl
+            local last=tick(); local frames=0
+            RunService.RenderStepped:Connect(function()
+                if not _G.Siriguela_FPSOn then return end; frames=frames+1; local now=tick()
+                if now-last>=0.5 then local fps=math.round(frames/(now-last)); lbl.Text="FPS  "..fps; last=now; frames=0 end end)
+        end; _G.Siriguela_FPSGui.Enabled=true
+    else if _G.Siriguela_FPSGui then _G.Siriguela_FPSGui.Enabled=false end end
+end)
+reg("swap",{"swappos"},"Swap positions with a player. Usage: swap [player]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Swap","Player not found"); return end
+    local myRoot=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+    if myRoot and tRoot then local myPos=myRoot.CFrame; local tPos=tRoot.CFrame
+        tRoot.CFrame=myPos; myRoot.CFrame=tPos; notify("Swap","Swapped with "..target.Name) end
+end)
+reg("version",{"ver","v2"},"Print Siriguela Admin version info",function()
+    local msg="Siriguela Admin v"..Siriguela_Version.." | "..#Players:GetPlayers().." players | Prefix: "..Siriguela_Prefix
+    notify("Version",msg); print("[Siriguela] "..msg)
+end)
+reg("coords",{"hud","positionhud"},"Toggle an on-screen position/coords HUD",function()
+    _G.Siriguela_CoordsHUD=not _G.Siriguela_CoordsHUD; notify("Coords HUD",_G.Siriguela_CoordsHUD and "ON" or "OFF")
+    if _G.Siriguela_CoordsHUD then
+        if not _G.Siriguela_CoordsLabel then
+            local sg=Instance.new("ScreenGui"); sg.Name="Siriguela_CoordsGui"; sg.ResetOnSpawn=false
+            sg.IgnoreGuiInset=true; sg.DisplayOrder=12
+            sg.Parent=LP:FindFirstChildOfClass("PlayerGui")
+            local lbl=Instance.new("TextLabel"); lbl.BackgroundColor3=Color3.fromRGB(0,0,0)
+            lbl.BackgroundTransparency=0.5; lbl.BorderSizePixel=0
+            lbl.Position=UDim2.new(0,8,1,-30); lbl.Size=UDim2.new(0,260,0,22)
+            lbl.Font=Enum.Font.Code; lbl.TextColor3=C.Accent; lbl.TextSize=12
+            lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.Text="Siriguela | X: - Y: - Z: -"; lbl.Parent=sg
+            local lc=Instance.new("UICorner"); lc.CornerRadius=UDim.new(0,4); lc.Parent=lbl
+            _G.Siriguela_CoordsLabel=lbl end
+        _G.Siriguela_CoordsLabel.Visible=true
+        task.spawn(function()
+            while _G.Siriguela_CoordsHUD do local root=getRoot(getChar())
+                if root and _G.Siriguela_CoordsLabel then local p=root.Position
+                    _G.Siriguela_CoordsLabel.Text=string.format("Siriguela | X:%.1f  Y:%.1f  Z:%.1f",p.X,p.Y,p.Z) end
+                task.wait(0.1) end
+            if _G.Siriguela_CoordsLabel then _G.Siriguela_CoordsLabel.Visible=false end end)
+    else if _G.Siriguela_CoordsLabel then _G.Siriguela_CoordsLabel.Visible=false end end
+end)
+reg("trail",{"trl","trailtoggle"},"Toggle a colorful trail effect behind your character",function()
+    _G.Siriguela_TrailOn=not _G.Siriguela_TrailOn; notify("Trail",_G.Siriguela_TrailOn and "ON" or "OFF")
+    if _G.Siriguela_TrailOn then
+        task.spawn(function()
+            local char=getChar(); local root=char and getRoot(char)
+            if not root then _G.Siriguela_TrailOn=false; return end
+            local att0=Instance.new("Attachment"); att0.Name="Siriguela_TrailAtt0"; att0.Position=Vector3.new(0,1,0); att0.Parent=root
+            local att1=Instance.new("Attachment"); att1.Name="Siriguela_TrailAtt1"; att1.Position=Vector3.new(0,-1,0); att1.Parent=root
+            local trail=Instance.new("Trail"); trail.Attachment0=att0; trail.Attachment1=att1
+            trail.Lifetime=0.6; trail.MinLength=0; trail.FaceCamera=true
+            trail.Color=ColorSequence.new({ColorSequenceKeypoint.new(0,C.Accent),ColorSequenceKeypoint.new(0.5,C.Accent2 or C.Accent),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,255,255))})
+            trail.Transparency=NumberSequence.new({NumberSequenceKeypoint.new(0,0),NumberSequenceKeypoint.new(1,1)})
+            trail.Parent=root; _G.Siriguela_TrailObj=trail
+            while _G.Siriguela_TrailOn do task.wait(0.5) end
+            pcall(function() trail:Destroy(); att0:Destroy(); att1:Destroy() end) end)
+    else if _G.Siriguela_TrailObj then pcall(function() _G.Siriguela_TrailObj:Destroy() end) end end
+end)
+reg("hats",{"accessories","nohats","nh"},"Toggle visibility of your character's accessories",function()
+    local char=getChar(); if not char then return end; _G.Siriguela_HatsOff=not _G.Siriguela_HatsOff
+    for _,v in ipairs(char:GetChildren()) do if v:IsA("Accessory") then local handle=v:FindFirstChild("Handle")
+        if handle then handle.Transparency=_G.Siriguela_HatsOff and 1 or 0 end end end
+    notify("Hats",_G.Siriguela_HatsOff and "Hidden" or "Visible")
+end)
+reg("savepos",{"sp3","savep"},"Save your position to a named slot. Usage: savepos [name]",function(args)
+    local slotName=args[1] or "default"; local root=getRoot(getChar()); if not root then return end
+    _G.Siriguela_SavedPositions=_G.Siriguela_SavedPositions or {}; _G.Siriguela_SavedPositions[slotName]=root.CFrame
+    notify("Save Pos","Saved '"..slotName.."'")
+end)
+reg("loadpos",{"lp3","loadp"},"Teleport to a saved position slot. Usage: loadpos [name]",function(args)
+    local slotName=args[1] or "default"; _G.Siriguela_SavedPositions=_G.Siriguela_SavedPositions or {}
+    local cf=_G.Siriguela_SavedPositions[slotName]
+    if not cf then notify("Load Pos","No saved slot: '"..slotName.."'"); return end
+    local root=getRoot(getChar()); if root then root.CFrame=cf; notify("Load Pos","Warped to '"..slotName.."'") end
+end)
+reg("freecam",{"fc2","freecamera","cam"},"Toggle free camera (detached from character)",function()
+    if _G.Siriguela_FreecamActive then
+        _G.Siriguela_FreecamActive=false
+        if _G.Siriguela_FreecamConn then _G.Siriguela_FreecamConn:Disconnect(); _G.Siriguela_FreecamConn=nil end
+        Camera.CameraType=Enum.CameraType.Custom; Camera.CameraSubject=getHuman(getChar())
+        notify("Freecam","OFF — camera restored"); return end
+    _G.Siriguela_FreecamActive=true; Camera.CameraType=Enum.CameraType.Scriptable
+    local speed=0.5; local camCF=Camera.CFrame
+    local lastMouse=Vector2.new(UserInputService:GetMouseLocation().X,UserInputService:GetMouseLocation().Y)
+    local pitch=0; local yaw=0
+    local _,_,_,_,_,_,_,_,_,r01,r11,r21=camCF:GetComponents()
+    pitch=math.asin(-r21); yaw=math.atan2(r11,r01)-math.pi/2
+    notify("Freecam","ON — WASD move, RMB look, Shift=fast, Z=slow")
+    _G.Siriguela_FreecamConn=RunService.RenderStepped:Connect(function()
+        if not _G.Siriguela_FreecamActive then return end
+        local mp=UserInputService:GetMouseLocation(); local dx=mp.X-lastMouse.X; local dy=mp.Y-lastMouse.Y; lastMouse=mp
+        if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+            yaw=yaw-dx*0.003; pitch=math.clamp(pitch-dy*0.003,-math.pi/2+0.05,math.pi/2-0.05) end
+        local rot=CFrame.Angles(0,yaw,0)*CFrame.Angles(pitch,0,0)
+        local spd=UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) and speed*4
+            or UserInputService:IsKeyDown(Enum.KeyCode.Z) and speed*0.25 or speed
+        local move=Vector3.zero
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then move=move+rot.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then move=move-rot.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then move=move-rot.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then move=move+rot.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.E) then move=move+Vector3.yAxis end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Q) then move=move-Vector3.yAxis end
+        camCF=CFrame.new(camCF.Position+move*spd)*rot; Camera.CFrame=camCF end)
+end)
+reg("camspeed",{"cs2"},"Set freecam movement speed. Usage: camspeed [value]",function(args)
+    local val=tonumber(args[1]) or 0.5; _G.Siriguela_FreecamSpeed=math.clamp(val,0.05,10)
+    notify("Cam Speed","Freecam speed = ".._G.Siriguela_FreecamSpeed)
+end)
+reg("theme",{"settheme","th"},"Change UI theme. Usage: theme [name]",function(args)
+    local name=(args[1] or ""):lower()
+    if not Themes[name] then notify("Theme","Unknown theme: "..name); return end; applyTheme(name)
+end)
+reg("uptime",{"ut","runtime"},"Show how long Siriguela Admin has been running",function()
+    local secs=math.floor(tick()-(_G.Siriguela_StartTime or tick()))
+    local mins=math.floor(secs/60); local hours=math.floor(mins/60)
+    local msg=string.format("%dh %dm %ds",hours,mins%60,secs%60)
+    notify("Uptime",msg); print("[Siriguela] Uptime: "..msg)
+end)
+reg("forward",{"fw","fwd"},"Move forward N studs in your look direction. Usage: forward [studs]",function(args)
+    local dist=tonumber(args[1]) or 10; local root=getRoot(getChar())
+    if root then root.CFrame=root.CFrame+root.CFrame.LookVector*dist; notify("Forward","Moved "..dist.." studs forward") end
+end)
+reg("ghostmode",{"gm2","ghost"},"Toggle ghost mode — no NPC collision or touch events",function()
+    _G.Siriguela_GhostMode=not _G.Siriguela_GhostMode; local char=getChar()
+    if char then for _,v in ipairs(char:GetDescendants()) do if v:IsA("BasePart") then v.CanTouch=not _G.Siriguela_GhostMode end end end
+    notify("Ghost Mode",_G.Siriguela_GhostMode and "ON" or "OFF")
+end)
+reg("throw",{"tr","launch"},"Throw a ball in your look direction. Usage: throw [speed]",function(args)
+    local spd=tonumber(args[1]) or 100; local root=getRoot(getChar()); if not root then return end
+    local ball=Instance.new("Part"); ball.Shape=Enum.PartType.Ball; ball.Size=Vector3.new(1.5,1.5,1.5)
+    ball.Color=C.Accent; ball.Material=Enum.Material.Neon; ball.CFrame=root.CFrame*CFrame.new(0,0,-3); ball.Parent=workspace
+    local bv=Instance.new("BodyVelocity"); bv.Velocity=root.CFrame.LookVector*spd; bv.MaxForce=Vector3.new(1e5,1e5,1e5); bv.Parent=ball
+    game:GetService("Debris"):AddItem(ball,8); notify("Throw","Launched at "..spd.." studs/s")
+end)
+reg("teamcount",{"tc","teaminfo"},"Print player count per team",function()
+    for _,t in ipairs(game:GetService("Teams"):GetTeams()) do
+        print(string.format("[Siriguela] %-20s %d player(s)",t.Name,#t:GetPlayers())) end
+    notify("Team Count",#Players:GetPlayers().." players total — see output")
+end)
+reg("freezeall",{"fall","fa2"},"Freeze all other players in place (local)",function()
+    _G.Siriguela_FreezeAll=not _G.Siriguela_FreezeAll; notify("Freeze All",_G.Siriguela_FreezeAll and "ON" or "OFF")
+    if _G.Siriguela_FreezeAll then task.spawn(function()
+        while _G.Siriguela_FreezeAll do
+            for _,plr in ipairs(Players:GetPlayers()) do if plr~=LP then local root=getRoot(getChar(plr))
+                if root and not root:FindFirstChild("Siriguela_FreezeALL") then
+                    local bv=Instance.new("BodyVelocity"); bv.Name="Siriguela_FreezeALL"
+                    bv.Velocity=Vector3.zero; bv.MaxForce=Vector3.new(1e9,1e9,1e9); bv.Parent=root end end end
+            task.wait(0.1) end
+        for _,plr in ipairs(Players:GetPlayers()) do local root=getRoot(getChar(plr))
+            if root then local bv=root:FindFirstChild("Siriguela_FreezeALL"); if bv then bv:Destroy() end end end end) end
+end)
+reg("tppart",{"tpp","gotopart"},"Teleport to a part by name. Usage: tppart [partname]",function(args)
+    if #args==0 then notify("TP Part","Provide a part name"); return end
+    local name=table.concat(args," "):lower(); local found=nil
+    for _,v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") and v.Name:lower():find(name,1,true) then found=v; break end end
+    if found then local root=getRoot(getChar())
+        if root then root.CFrame=found.CFrame+Vector3.new(0,found.Size.Y/2+3,0); notify("TP Part","Teleported to: "..found.Name) end
+    else notify("TP Part","No part found matching: "..name) end
+end)
+-- v2.3.0 COMMANDS
+reg("runscript",{"exrun","rs2"},"Execute the current Executor tab's script",function()
+    if ExecEditor then
+        local code=ExecEditor.Text; if code=="" then notify("Run Script","Executor is empty"); return end
+        local ok,err=pcall(function() local fn=loadstring(code); if fn then fn() end end)
+        notify("Run Script",ok and "✔ Done" or ("✘ "..tostring(err):sub(1,40))) end
+end)
+reg("animspeed",{"as2"},"Set animation playback speed. Usage: animspeed [0.1-5]",function(args)
+    local speed=math.clamp(tonumber(args[1]) or 1,0.1,5); local char=getChar(); if not char then return end
+    local h=getHuman(char); if h then
+        for _,track in ipairs(h:GetPlayingAnimationTracks()) do pcall(function() track:AdjustSpeed(speed) end) end end
+    notify("Anim Speed","Speed = "..speed)
+end)
+reg("isonline",{"io","ishere"},"Check if a player is in the server. Usage: isonline [player]",function(args)
+    if #args==0 then notify("Is Online","Provide a player name"); return end
+    local name=table.concat(args," "):lower()
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p.Name:lower():find(name,1,true) then notify("Is Online",p.Name.." is HERE! (ID: "..p.UserId..")"); return end end
+    notify("Is Online",name.." is NOT in this server")
+end)
+reg("godall",{"ga2"},"Apply max health to all player characters locally",function()
+    for _,plr in ipairs(Players:GetPlayers()) do local h=getHuman(getChar(plr))
+        if h then h.MaxHealth=math.huge; h.Health=math.huge end end
+    notify("God All","Max health applied to all "..#Players:GetPlayers().." players")
+end)
+reg("createpart",{"cp3","newpart"},"Spawn a neon part at your position. Usage: createpart [r g b]",function(args)
+    local root=getRoot(getChar()); if not root then return end
+    local r=tonumber(args[1]) or 255; local g=tonumber(args[2]) or 200; local b=tonumber(args[3]) or 0
+    local part=Instance.new("Part"); part.Anchored=true; part.Size=Vector3.new(4,4,4)
+    part.Position=root.Position+Vector3.new(0,5,-6); part.Color=Color3.fromRGB(r,g,b)
+    part.Material=Enum.Material.Neon; part.Name="Siriguela_Part"; part.Parent=workspace
+    notify("Create Part",string.format("Spawned at (%.0f,%.0f,%.0f)",part.Position.X,part.Position.Y,part.Position.Z))
+end)
+reg("deletesiriguelaparts",{"dap","cleanup"},"Delete all parts spawned by Siriguela Admin",function()
+    local count=0
+    for _,v in ipairs(workspace:GetDescendants()) do if v.Name=="Siriguela_Part" then v:Destroy(); count=count+1 end end
+    notify("Clean Up","Removed "..count.." Siriguela part(s)")
+end)
+reg("speedup",{"su","faster"},"Increase walkspeed by 5",function()
+    Siriguela_SpeedVal=Siriguela_SpeedVal+5; local h=getHuman(getChar()); if h then h.WalkSpeed=Siriguela_SpeedVal end
+    notify("Speed+","WalkSpeed = "..Siriguela_SpeedVal)
+end)
+reg("slowdown",{"sd","slower"},"Decrease walkspeed by 5 (min 0)",function()
+    Siriguela_SpeedVal=math.max(0,Siriguela_SpeedVal-5); local h=getHuman(getChar()); if h then h.WalkSpeed=Siriguela_SpeedVal end
+    notify("Speed-","WalkSpeed = "..Siriguela_SpeedVal)
+end)
+reg("shiftlock",{"sl","mouselock"},"Toggle shift-lock (mouse lock center)",function()
+    _G.Siriguela_ShiftLock=not _G.Siriguela_ShiftLock; LP.DevEnableMouseLock=_G.Siriguela_ShiftLock
+    notify("Shift Lock",_G.Siriguela_ShiftLock and "ON" or "OFF")
+end)
+reg("printchar",{"pchar","charinfo"},"Print your character's part hierarchy to output",function()
+    local char=getChar(); if not char then notify("Print Char","No character"); return end
+    local count=0
+    for _,v in ipairs(char:GetChildren()) do print(string.format("[Siriguela] %s — %s",v.ClassName,v.Name)); count=count+1 end
+    notify("Char Info",count.." items — see output")
+end)
+reg("speedkey",{"sk"},"Toggle holding Q to boost speed to 80",function()
+    _G.Siriguela_SpeedKey=not _G.Siriguela_SpeedKey; notify("Speed Key",_G.Siriguela_SpeedKey and "ON — hold Q to boost!" or "OFF")
+    if _G.Siriguela_SpeedKey then task.spawn(function()
+        while _G.Siriguela_SpeedKey do local h=getHuman(getChar())
+            if h then if UserInputService:IsKeyDown(Enum.KeyCode.Q) then h.WalkSpeed=80
+                else h.WalkSpeed=Siriguela_SpeedVal end end
+            task.wait(0.05) end
+        local h=getHuman(getChar()); if h then h.WalkSpeed=Siriguela_SpeedVal end end) end
+end)
+reg("tag",{"settag"},"Add a local tag label above a player. Usage: tag [player] [label]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Tag","Player not found"); return end
+    local label=""; for i=2,#args do label=label..args[i].." " end; label=label:match("^%s*(.-)%s*$")
+    if label=="" then notify("Tag","Provide a label"); return end
+    local tChar=getChar(target); local tHead=tChar and tChar:FindFirstChild("Head")
+    if not tHead then notify("Tag","Can't find head"); return end
+    local bb=Instance.new("BillboardGui"); bb.Size=UDim2.new(0,140,0,26); bb.StudsOffset=Vector3.new(0,3.5,0)
+    bb.AlwaysOnTop=false; bb.Adornee=tHead; bb.Parent=tChar
+    local l=Instance.new("TextLabel"); l.BackgroundTransparency=1; l.Size=UDim2.new(1,0,1,0)
+    l.Font=Enum.Font.GothamBold; l.Text=label; l.TextColor3=C.Accent; l.TextSize=13; l.TextStrokeTransparency=0.4; l.Parent=bb
+    notify("Tag",target.Name.." tagged: "..label)
+end)
+reg("bounce",{"bj2","jumploop"},"Toggle continuous jumping (bouncing)",function()
+    _G.Siriguela_Bounce=not _G.Siriguela_Bounce; notify("Bounce",_G.Siriguela_Bounce and "ON" or "OFF")
+    if _G.Siriguela_Bounce then task.spawn(function()
+        while _G.Siriguela_Bounce do local h=getHuman(getChar())
+            if h and h:GetState()==Enum.HumanoidStateType.Landed then h:ChangeState(Enum.HumanoidStateType.Jumping) end
+            task.wait(0.05) end end) end
+end)
+reg("above",{"tpabove","ab"},"Teleport directly above a player. Usage: above [player] [height]",function(args)
+    local target=args[1] and findPlayer(args[1])
+    if not target or type(target)=="table" then notify("Above","Player not found"); return end
+    local height=tonumber(args[2]) or 15; local myRoot=getRoot(getChar()); local tRoot=getRoot(getChar(target))
+    if myRoot and tRoot then myRoot.CFrame=tRoot.CFrame+Vector3.new(0,height,0)
+        notify("Above","Teleported "..height.." studs above "..target.Name) end
+end)
+reg("outline",{"outl"},"Toggle a colored outline on your character",function()
+    local char=getChar(); if not char then return end
+    local existing=char:FindFirstChildOfClass("SelectionBox")
+    if existing then existing:Destroy(); notify("Outline","Removed"); return end
+    local sb=Instance.new("SelectionBox"); sb.Adornee=char; sb.Color3=C.Accent; sb.LineThickness=0.05
+    sb.SurfaceColor3=C.Accent; sb.SurfaceTransparency=0.8; sb.Parent=char; notify("Outline","Outline applied")
+end)
+reg("gibberish",{"gib"},"Send a random gibberish chat message",function()
+    local chars="abcdefghijklmnopqrstuvwxyz"; local msg=""
+    for _=1,math.random(6,18) do local idx=math.random(1,#chars); msg=msg..chars:sub(idx,idx) end
+    pcall(function() game:GetService("ReplicatedStorage"):FindFirstChild("DefaultChatSystemChatEvents")
+        :FindFirstChild("SayMessageRequest"):FireServer(msg,"All") end)
+    notify("Gibberish",msg)
+end)
+reg("timer",{"countdown","cd"},"Start a countdown. Usage: timer [seconds]",function(args)
+    local secs=math.clamp(tonumber(args[1]) or 10,1,120); notify("Timer","Countdown: "..secs.."s")
+    task.spawn(function()
+        for i=secs,1,-1 do task.wait(1); if i<=5 then notify("Timer","⏱ "..i.."s remaining!",1.2) end end
+        notify("Timer","⏱ TIME'S UP!",4) end)
+end)
+reg("binds",{"keybinds","kb2"},"List all Siriguela key binds",function()
+    local count=0; for key,cmd in pairs(Siriguela_Binds) do print(string.format("[Siriguela] Bind: %s → %s",tostring(key),cmd)); count=count+1 end
+    if count==0 then notify("Binds","No binds set — use 'bind' to add them") else notify("Binds",count.." bind(s) — see output") end
+end)
+reg("bind",{"keybind","kb3"},"Bind a key to a command. Usage: bind [KeyCode] [command]",function(args)
+    if #args<2 then notify("Bind","Usage: bind [KeyCode e.g. F] [command]"); return end
+    local keyName=args[1]:upper(); local cmd=table.concat(args," ",2)
+    local ok,keyEnum=pcall(function() return Enum.KeyCode[keyName] end)
+    if not ok or not keyEnum then notify("Bind","Invalid key: "..keyName); return end
+    Siriguela_Binds[keyName]=cmd; notify("Bind",keyName.." → "..cmd)
+end)
+reg("unbind",{"removekey","ub2"},"Remove a key bind. Usage: unbind [KeyCode]",function(args)
+    if #args==0 then notify("Unbind","Provide a key"); return end
+    local keyName=args[1]:upper()
+    if Siriguela_Binds[keyName] then Siriguela_Binds[keyName]=nil; notify("Unbind",keyName.." unbound")
+    else notify("Unbind",keyName.." has no bind") end
+end)
+-- MASS PLAYER COMMANDS
+reg("allspeed",{"aspd","massws"},"Set walkspeed for all players. Usage: allspeed [value]",function(args)
+    local val=tonumber(args[1]) or 16
+    for _,p in ipairs(Players:GetPlayers()) do local h=getHuman(getChar(p)); if h then h.WalkSpeed=val end end
+    notify("All Speed","WalkSpeed = "..val.." for all players")
+end)
+reg("sizeall",{"szall","masssize"},"Set size for all players. Usage: sizeall [value]",function(args)
+    local val=tonumber(args[1]) or 1
+    for _,p in ipairs(Players:GetPlayers()) do local h=getHuman(getChar(p))
+        if h then h.BodyDepthScale.Value=val; h.BodyHeightScale.Value=val; h.BodyWidthScale.Value=val; h.HeadScale.Value=val end end
+    notify("Size All","Size = "..val)
+end)
+reg("allheal",{"ahlx","masshealth"},"Heal all players to full health",function()
+    for _,p in ipairs(Players:GetPlayers()) do local h=getHuman(getChar(p)); if h then h.Health=h.MaxHealth end end
+    notify("All Heal","All players healed")
+end)
+reg("invisall",{"iall","massinvis"},"Toggle invisibility for all players",function()
+    _G.Siriguela_InvisAll=not _G.Siriguela_InvisAll
+    for _,p in ipairs(Players:GetPlayers()) do local char=getChar(p); if char then
+        for _,v in ipairs(char:GetDescendants()) do
+            if v:IsA("BasePart") or v:IsA("Decal") then v.Transparency=_G.Siriguela_InvisAll and 1 or 0 end end end end
+    notify("Invis All",_G.Siriguela_InvisAll and "All invisible" or "All visible")
+end)
+reg("spinall",{"spnl","masspin"},"Spin all players in the server",function()
+    _G.Siriguela_SpinAll=not _G.Siriguela_SpinAll; notify("Spin All",_G.Siriguela_SpinAll and "ON" or "OFF")
+    if _G.Siriguela_SpinAll then task.spawn(function()
+        while _G.Siriguela_SpinAll do
+            for _,p in ipairs(Players:GetPlayers()) do local root=getRoot(getChar(p))
+                if root then root.CFrame=root.CFrame*CFrame.Angles(0,math.rad(15),0) end end
+            task.wait(0.03) end end) end
+end)
+reg("killall",{"kall","masskill"},"Kill all players in the server",function()
+    for _,p in ipairs(Players:GetPlayers()) do local h=getHuman(getChar(p)); if h then h.Health=0 end end
+    notify("Kill All","All players eliminated")
+end)
+reg("tpall",{"tpa2","massgather"},"Teleport all players to your position",function()
+    local root=getRoot(getChar()); if not root then return end
+    for _,p in ipairs(Players:GetPlayers()) do i
